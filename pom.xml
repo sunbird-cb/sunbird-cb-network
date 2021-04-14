@@ -1,12 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
-  ~ /*               "Copyright 2020 Infosys Ltd.
-  ~                Use of this source code is governed by GPL v3 license that can be found in the LICENSE file or at https://opensource.org/licenses/GPL-3.0
-  ~                This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License version 3" */
-  ~
-  -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
@@ -15,11 +10,11 @@
 		<version>2.1.4.RELEASE</version>
 		<relativePath />
 	</parent>
-	<groupId>com.infosys</groupId>
+	<groupId>org.sunbird.cb</groupId>
 	<artifactId>hub-services</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>hub-services</name>
-	<description>Hub services tool </description>
+	<description>Hub services tool</description>
 
 	<properties>
 		<java.version>1.8</java.version>
@@ -29,7 +24,7 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
-			 <exclusions>
+			<exclusions>
 				<exclusion>
 					<groupId>org.springframework.boot</groupId>
 					<artifactId>spring-boot-starter-logging</artifactId>
@@ -48,30 +43,16 @@
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-log4j2</artifactId>			
+			<artifactId>spring-boot-starter-log4j2</artifactId>
 		</dependency>
 
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-test</artifactId>
-			<scope>test</scope>
-		</dependency>
 		<dependency>
 			<groupId>org.springframework.data</groupId>
 			<artifactId>spring-data-cassandra</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.springframework.kafka</groupId>
-			<artifactId>spring-kafka</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-cassandra</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.neo4j.driver</groupId>
-			<artifactId>neo4j-java-driver</artifactId>
-			<version>1.7.2</version>
 		</dependency>
 		<dependency>
 			<groupId>com.rockymadden.stringmetric</groupId>
@@ -83,10 +64,6 @@
 			<artifactId>spring-boot-starter-aop</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-log4j2</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-io</artifactId>
 			<version>1.3.2</version>
@@ -96,7 +73,7 @@
 			<artifactId>elasticsearch</artifactId>
 			<version>6.8.0</version>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-actuator</artifactId>
@@ -139,11 +116,6 @@
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>
 			<artifactId>junit-jupiter-engine</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
