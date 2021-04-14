@@ -47,14 +47,6 @@
 		</dependency>
 
 		<dependency>
-			<groupId>org.springframework.data</groupId>
-			<artifactId>spring-data-cassandra</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-data-cassandra</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>com.rockymadden.stringmetric</groupId>
 			<artifactId>stringmetric-core_2.11</artifactId>
 			<version>0.27.4</version>
