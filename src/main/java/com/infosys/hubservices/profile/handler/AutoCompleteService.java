@@ -1,6 +1,7 @@
 package com.infosys.hubservices.profile.handler;
 
 import com.infosys.hubservices.exception.ApplicationException;
+import com.infosys.hubservices.exception.BadRequestException;
 import com.infosys.hubservices.util.ConnectionProperties;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
@@ -34,7 +35,7 @@ public class AutoCompleteService {
 
     public List<Map<String, Object>> getUserSearchData(String searchTerm) throws IOException {
         if (StringUtils.isEmpty(searchTerm))
-            throw new ApplicationException("Search term should not be empty!");
+            throw new BadRequestException("Search term should not be empty!");
         List<Map<String, Object>> resultArray = new ArrayList<>();
         Map<String, Object> result;
         String depName;
@@ -53,11 +54,10 @@ public class AutoCompleteService {
         for (SearchHit hit : searchResponse.getHits()) {
             Map<String, Object> searObjectMap = hit.getSourceAsMap();
             Map<String, Object> personalDetails = (Map<String, Object>) searObjectMap.get("personalDetails");
-            List<Map<String, Object>> professionalDetails = (List<Map<String, Object>>) searObjectMap.get("professionalDetails");
+            Map<String, Object> employmentDetails = (Map<String, Object>) searObjectMap.get("employmentDetails");
             depName = null;
-            if (!CollectionUtils.isEmpty(professionalDetails)) {
-                Map<String, Object> propDetails = professionalDetails.stream().findFirst().get();
-                depName = CollectionUtils.isEmpty(propDetails) ? "" : (String) propDetails.get("name");
+            if (!CollectionUtils.isEmpty(employmentDetails)) {
+                depName = StringUtils.isEmpty(employmentDetails.get("departmentName")) ? "" : (String) employmentDetails.get("departmentName");
             }
             result = new HashMap<>();
             result.put("first_name", personalDetails.get("firstname"));
