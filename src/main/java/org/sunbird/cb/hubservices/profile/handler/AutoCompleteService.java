@@ -40,9 +40,9 @@ public class AutoCompleteService {
 		Map<String, Object> result;
 		String depName;
 		final BoolQueryBuilder query = QueryBuilders.boolQuery();
-		query.should(QueryBuilders.matchPhraseQuery("personalDetails.primaryEmail", searchTerm))
-				.should(QueryBuilders.matchPhraseQuery("personalDetails.firstname", searchTerm))
-				.should(QueryBuilders.matchPhraseQuery("personalDetails.surname", searchTerm));
+		query.should(QueryBuilders.matchPhrasePrefixQuery("personalDetails.primaryEmail", searchTerm))
+				.should(QueryBuilders.matchPhrasePrefixQuery("personalDetails.firstname", searchTerm))
+				.should(QueryBuilders.matchPhrasePrefixQuery("personalDetails.surname", searchTerm));
 		SearchSourceBuilder sourceBuilder = new SearchSourceBuilder().query(query);
 		sourceBuilder.fetchSource(includeFields, new String[] {});
 		SearchRequest searchRequest = new SearchRequest();
