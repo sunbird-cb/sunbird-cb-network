@@ -18,6 +18,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 @Service
 public class ProfileRequestHandler implements IProfileRequestHandler {
 
@@ -136,6 +138,12 @@ public class ProfileRequestHandler implements IProfileRequestHandler {
 		registryRequest.setId(ProfileUtils.API.SEARCH.getValue());
 		registryRequest.getRequest().put(ProfileUtils.Profile.ENTITY_TYPE, types);
 		registryRequest.getRequest().put(ProfileUtils.Profile.FILTERs, filters);
+		try {
+			ObjectMapper om = new ObjectMapper();
+			logger.info("GET User By ID - request -> " + om.writeValueAsString(registryRequest));
+		} catch (Exception e) {
+			logger.info("Failed to write value as String...");
+		}
 		return registryRequest;
 	}
 
