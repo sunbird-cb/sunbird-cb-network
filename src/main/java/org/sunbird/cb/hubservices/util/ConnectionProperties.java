@@ -57,6 +57,15 @@ public class ConnectionProperties {
 	@Value("${notification.enabled}")
 	private boolean notificationEnabled;
 
+	@Value("${sunbird.learner.service.host}")
+	private String learnerServiceHost;
+
+	@Value("${sunbird.user.search.endpoint}")
+	private String userSearchEndPoint;
+
+	@Value("${sunbird.user.update.endpoint}")
+	private String userUpdateEndPoint;
+
 	public String getEsProfileIndex() {
 		return esProfileIndex;
 	}
@@ -111,6 +120,14 @@ public class ConnectionProperties {
 
 	public String getNotificationTemplateRequest() {
 		return notificationTemplateRequest;
+	}
+
+	public String getLearnerServiceHost() {return learnerServiceHost;}
+
+	public String getUserSearchEndPoint() {return userSearchEndPoint;}
+
+	public String getUserUpdateEndPoint() {
+		return userUpdateEndPoint;
 	}
 
 	public String getNotificationTemplateResponse() {

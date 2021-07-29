@@ -9,7 +9,7 @@ public interface IProfileRequestHandler {
 
 	public RegistryRequest updateRequest(String uuid, Map<String, Object> request);
 
-	public RegistryRequest updateRequestWithWF(String uuid, List<Map<String, Object>> requests);
+	public Map<String, Object> updateRequestWithWF(String uuid, List<Map<String, Object>> requests);
 
 	public RegistryRequest searchRequest(String uuid);
 
