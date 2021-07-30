@@ -5,6 +5,8 @@ import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.http.client.HttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +16,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.client.RestTemplate;
@@ -167,14 +170,27 @@ public class ProfileUtils {
 
     public ResponseEntity updateProfile(String uuid, Map<String, Object> profileObj){
         StringBuilder builder = new StringBuilder();
-        HttpHeaders requestHeaders = new HttpHeaders();
         Map<String, Object> requestObject = new HashMap<>();
         Map<String, Object> requestWrapper = new HashMap<>();
         requestWrapper.put("userId", uuid);
         requestWrapper.put("profileDetails", profileObj);
         requestObject.put("request", requestWrapper);
-        requestHeaders.add("Accept", MediaType.APPLICATION_JSON_VALUE);
-        HttpEntity<Object> requestEntity = new HttpEntity<>(requestObject, requestHeaders);
+        RestTemplate restTemplate = new RestTemplate();
+
+        HttpClient httpClient = HttpClientBuilder.create().build();
+        restTemplate.setRequestFactory(new
+                HttpComponentsClientHttpRequestFactory(httpClient));
+        HttpHeaders reqHeaders = new HttpHeaders();
+        reqHeaders.setContentType(MediaType.APPLICATION_JSON);
+
+        ObjectMapper mapper = new ObjectMapper();
+
+        try {
+            logger.info("profile update request object :: {}", mapper.writeValueAsString(requestObject));
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+        HttpEntity<Object> requestEntity = new HttpEntity<>(requestObject, reqHeaders);
         builder.append(connectionProperties.getLearnerServiceHost()).append(connectionProperties.getUserUpdateEndPoint());
         ResponseEntity responseEntity = restTemplate.exchange(
                 builder.toString(),
@@ -182,9 +198,8 @@ public class ProfileUtils {
                 requestEntity,
                 Map.class
         );
-        ObjectMapper mapper = new ObjectMapper();
         try {
-            logger.info("update response :: ", mapper.writeValueAsString(responseEntity.getBody()));
+            logger.info("profile update response :: {}", mapper.writeValueAsString(responseEntity.getBody()));
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }

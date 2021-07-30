@@ -74,7 +74,7 @@ public class ProfileRequestHandler implements IProfileRequestHandler {
 		Map<String, Object> search = profileUtils.getUserProfiles(Arrays.asList(uuid)).get(0);
 		ObjectMapper mapper = new ObjectMapper();
 		try {
-			logger.info("profile response :", mapper.writeValueAsString(search));
+			logger.info("profile response : {}", mapper.writeValueAsString(search));
 		} catch (JsonProcessingException e) {
 			e.printStackTrace();
 		}
@@ -104,7 +104,7 @@ public class ProfileRequestHandler implements IProfileRequestHandler {
 			profileUtils.mergeLeaf(search, toChange, request.get("fieldKey").toString(), osid);
 		}
 		try {
-			logger.info("profile merged changes :", mapper.writeValueAsString(search));
+			logger.info("profile merged changes {}:", mapper.writeValueAsString(search));
 		} catch (JsonProcessingException e) {
 			e.printStackTrace();
 		}
