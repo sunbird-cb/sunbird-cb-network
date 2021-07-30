@@ -1,25 +1,40 @@
 package org.sunbird.cb.hubservices.profile.handler;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.http.client.HttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.client.RestTemplate;
+import org.sunbird.cb.hubservices.util.ConnectionProperties;
 
 @Component
 public class ProfileUtils {
 
     static final RestTemplate restTemplate = new RestTemplate();
 
+    private Logger logger = LoggerFactory.getLogger(ProfileUtils.class);
+
+
     @Value(value = "${user.registry.ip}")
     String baseUrl;
+
+    @Autowired
+    private ConnectionProperties connectionProperties;
 
     public static enum API {
         CREATE("open-saber.registry.create"), READ("open-saber.registry.read"),
@@ -129,5 +144,64 @@ public class ProfileUtils {
         return new ResponseEntity<>(responseEntity.getBody(), responseEntity.getStatusCode());
     }
 
+    public List<Map<String, Object>> getUserProfiles(List<String> userIds){
+        StringBuilder builder = new StringBuilder();
+        HttpHeaders requestHeaders = new HttpHeaders();
+        Map<String, Object> registryRequest = getSearchObject(userIds);
+        requestHeaders.add("Accept", MediaType.APPLICATION_JSON_VALUE);
+        HttpEntity<Object> requestEntity = new HttpEntity<>(registryRequest, requestHeaders);
+        builder.append(connectionProperties.getLearnerServiceHost()).append(connectionProperties.getUserSearchEndPoint());
+        ResponseEntity responseEntity = restTemplate.exchange(
+                builder.toString(),
+                HttpMethod.POST,
+                requestEntity,
+                Map.class
+        );
+        Map<String, Object> profileResponse = (Map<String, Object>)responseEntity.getBody();
+        if (profileResponse != null && "OK".equalsIgnoreCase((String) profileResponse.get("responseCode"))) {
+            Map<String, Object> map = (Map<String, Object>) profileResponse.get("result");
+            if(map.get("response") != null){
+                List<Map<String, Object>> userProfiles = (List<Map<String, Object>>)((Map<String, Object>) map.get("response")).get("content");
+                return userProfiles.stream().filter( userprofile -> userprofile.get("profileDetails") != null).map(userprofile -> (Map<String, Object>)userprofile.get("profileDetails")).collect(Collectors.toList());
+            }
+        }
+        return Collections.emptyList();
+    }
 
+    public ResponseEntity updateProfile(String uuid, Map<String, Object> profileObj){
+        StringBuilder builder = new StringBuilder();
+        Map<String, Object> requestObject = new HashMap<>();
+        Map<String, Object> requestWrapper = new HashMap<>();
+        requestWrapper.put("userId", uuid);
+        requestWrapper.put("profileDetails", profileObj);
+        requestObject.put("request", requestWrapper);
+        RestTemplate restTemplate = new RestTemplate();
+
+        HttpClient httpClient = HttpClientBuilder.create().build();
+        restTemplate.setRequestFactory(new
+                HttpComponentsClientHttpRequestFactory(httpClient));
+        HttpHeaders reqHeaders = new HttpHeaders();
+        reqHeaders.setContentType(MediaType.APPLICATION_JSON);
+
+        HttpEntity<Object> requestEntity = new HttpEntity<>(requestObject, reqHeaders);
+        builder.append(connectionProperties.getLearnerServiceHost()).append(connectionProperties.getUserUpdateEndPoint());
+        ResponseEntity responseEntity = restTemplate.exchange(
+                builder.toString(),
+                HttpMethod.PATCH,
+                requestEntity,
+                Map.class
+        );
+        return new ResponseEntity<>(responseEntity.getBody(), responseEntity.getStatusCode());
+
+    }
+    private Map<String, Object> getSearchObject(List<String> userIds) {
+        Map<String, Object> request = new HashMap<>();
+        Map<String, Object> filters = new HashMap<>();
+        filters.put("userId", userIds);
+        request.put("filters", filters);
+        request.put("query", "");
+        Map<String, Object> requestWrapper = new HashMap<>();
+        requestWrapper.put("request", request);
+        return requestWrapper;
+    }
 }

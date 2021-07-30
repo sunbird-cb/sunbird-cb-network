@@ -1,14 +1,10 @@
 package org.sunbird.cb.hubservices.profile.handler;
 
-import java.util.AbstractMap;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -67,33 +63,15 @@ public class ProfileRequestHandler implements IProfileRequestHandler {
 	}
 
 	@Override
-	public RegistryRequest updateRequestWithWF(String uuid, List<Map<String, Object>> requests) {
-//        HttpHeaders requestHeaders = new HttpHeaders();
-//        requestHeaders.add("Accept", MediaType.APPLICATION_JSON_VALUE);
-//
-//
-//        List types = Arrays.asList(ProfileUtils.Profile.USER_PROFILE);
-//        Map<String, Map<String, Map<String, Object>>> filters = new HashMap<>();
-//
-//        Map<String, Object> filterItem = new HashMap<>();
-//        filterItem.put("eq",  request.get("osid"));
-//        filters.put((String)request.get("fieldKey"), Stream.of(new AbstractMap.SimpleEntry<>("osid", filterItem))
-//                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
-//
-//
-//        RegistryRequest registryRequest = new RegistryRequest();
-//        registryRequest.setId(ProfileUtils.API.SEARCH.getValue());
-//        registryRequest.getRequest().put(ProfileUtils.Profile.ENTITY_TYPE, types);
-//        registryRequest.getRequest().put(ProfileUtils.Profile.FILTERs, filters);
+	public Map<String, Object> updateRequestWithWF(String uuid, List<Map<String, Object>> requests) {
 
-		// search with user id
-		ResponseEntity responseEntity = profileUtils.getResponseEntity(ProfileUtils.URL.SEARCH.getValue(),
-				searchRequest(uuid));
+//		ResponseEntity responseEntity = profileUtils.getResponseEntity(ProfileUtils.URL.SEARCH.getValue(),
+//				searchRequest(uuid));
+//
+//		Object searchResult = ((Map<String, Object>) ((Map<String, Object>) responseEntity.getBody()).get("result"))
+//				.get(ProfileUtils.Profile.USER_PROFILE);
 
-		Object searchResult = ((Map<String, Object>) ((Map<String, Object>) responseEntity.getBody()).get("result"))
-				.get(ProfileUtils.Profile.USER_PROFILE);
-
-		Map<String, Object> search = ((Map<String, Object>) ((List) searchResult).get(0));
+		Map<String, Object> search = profileUtils.getUserProfiles(Arrays.asList(uuid)).get(0);
 		// merge request and search to add osid(s)
 		for (Map<String, Object> request : requests) {
 			String osid = StringUtils.isEmpty(request.get("osid")) == true ? "" : request.get("osid").toString();
@@ -119,12 +97,7 @@ public class ProfileRequestHandler implements IProfileRequestHandler {
 
 			profileUtils.mergeLeaf(search, toChange, request.get("fieldKey").toString(), osid);
 		}
-
-		RegistryRequest registryRequest = new RegistryRequest();
-		registryRequest.setId(ProfileUtils.API.UPDATE.getValue());
-		registryRequest.getRequest().put(ProfileUtils.Profile.USER_PROFILE, search);
-
-		return registryRequest;
+		return search;
 	}
 
 	@Override
