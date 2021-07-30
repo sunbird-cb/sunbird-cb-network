@@ -183,13 +183,6 @@ public class ProfileUtils {
         HttpHeaders reqHeaders = new HttpHeaders();
         reqHeaders.setContentType(MediaType.APPLICATION_JSON);
 
-        ObjectMapper mapper = new ObjectMapper();
-
-        try {
-            logger.info("profile update request object :: {}", mapper.writeValueAsString(requestObject));
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }
         HttpEntity<Object> requestEntity = new HttpEntity<>(requestObject, reqHeaders);
         builder.append(connectionProperties.getLearnerServiceHost()).append(connectionProperties.getUserUpdateEndPoint());
         ResponseEntity responseEntity = restTemplate.exchange(
@@ -198,11 +191,6 @@ public class ProfileUtils {
                 requestEntity,
                 Map.class
         );
-        try {
-            logger.info("profile update response :: {}", mapper.writeValueAsString(responseEntity.getBody()));
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }
         return new ResponseEntity<>(responseEntity.getBody(), responseEntity.getStatusCode());
 
     }
