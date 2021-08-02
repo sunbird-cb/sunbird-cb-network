@@ -128,6 +128,22 @@ public class ProfileUtils {
         }
     }
 
+    public static ResponseEntity getResponseEntity(String baseUrl, String endPoint, RegistryRequest registryRequest){
+        HttpHeaders requestHeaders = new HttpHeaders();
+        requestHeaders.add("Accept", MediaType.APPLICATION_JSON_VALUE);
+
+        HttpEntity<RegistryRequest> requestEntity = new HttpEntity<>(registryRequest, requestHeaders);
+
+        ResponseEntity responseEntity = restTemplate.exchange(
+                baseUrl + endPoint,
+                HttpMethod.POST,
+                requestEntity,
+                Map.class
+        );
+
+        return new ResponseEntity<>(responseEntity.getBody(), responseEntity.getStatusCode());
+    }
+
     public ResponseEntity getResponseEntity(String endPoint, RegistryRequest registryRequest){
         HttpHeaders requestHeaders = new HttpHeaders();
         requestHeaders.add("Accept", MediaType.APPLICATION_JSON_VALUE);

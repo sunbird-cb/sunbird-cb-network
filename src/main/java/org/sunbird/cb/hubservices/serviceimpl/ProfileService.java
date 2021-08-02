@@ -21,11 +21,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.sunbird.cb.hubservices.exception.ApplicationException;
 import org.sunbird.cb.hubservices.model.MultiSearch;
 import org.sunbird.cb.hubservices.model.Response;
 import org.sunbird.cb.hubservices.model.Search;
+import org.sunbird.cb.hubservices.profile.handler.ProfileUtils;
+import org.sunbird.cb.hubservices.profile.handler.RegistryRequest;
 import org.sunbird.cb.hubservices.service.IProfileService;
 import org.sunbird.cb.hubservices.util.ConnectionProperties;
 import org.sunbird.cb.hubservices.util.Constants;
@@ -93,55 +96,37 @@ public class ProfileService implements IProfileService {
 
             List<String> tags = new ArrayList<>();
 
-            MultiSearchRequest request = new MultiSearchRequest();
+            Map<String, Object> tagRes = new HashMap<>();
 
             for(Search sRequest: mSearchRequest.getSearch()) {
 
-                SearchRequest searchRequest = new SearchRequest();
-
-                searchRequest.indices(connectionProperties.getEsProfileIndex());
-                searchRequest.types(connectionProperties.getEsProfileIndexType());
-
-                SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+                //Prepare of SearchDTO
+                RegistryRequest registryRequest = new RegistryRequest();
+                Map<String, Object> searchQueryMap = new HashMap<>();
+                Map<String, Object> additionalProperties = new HashMap<>();
+                additionalProperties.put(sRequest.getField(),sRequest.getValues().get(0));
+                searchQueryMap.put("query","");
+                searchQueryMap.put("filter",additionalProperties);
+                searchQueryMap.put("offset",mSearchRequest.getOffset());
+                searchQueryMap.put("limit",mSearchRequest.getSize());
+                registryRequest.setRequest(searchQueryMap);
                 tags.add(sRequest.getField());
-                BoolQueryBuilder query = QueryBuilders.boolQuery().must(QueryBuilders.termsQuery(sRequest.getField().concat(".keyword"), sRequest.getValues())).mustNot(QueryBuilders.termsQuery("id.keyword", connectionIdsToExclude));
 
-                searchSourceBuilder.query(query);
-                searchRequest.source(searchSourceBuilder);
-                if (sourceFields != null && sourceFields.length>0) {
-                    String[] mergedSource = (String[])Stream.of(connectionProperties.getEsProfileSourceFields(), sourceFields).flatMap(Stream::of).toArray();
-                    searchSourceBuilder.fetchSource(mergedSource, new String[] {});
-
-                } else {
-                    searchSourceBuilder.fetchSource(connectionProperties.getEsProfileSourceFields(), new String[] {});
-
-                }
-                searchSourceBuilder.from(mSearchRequest.getOffset());
-                searchSourceBuilder.size(mSearchRequest.getSize());
-                searchSourceBuilder.sort("osCreatedAt", SortOrder.DESC);
-
-                request.add(searchRequest);
+                //Hit user search Api
+                ResponseEntity responseEntity = ProfileUtils.getResponseEntity(connectionProperties.getLearnerServiceHost(), connectionProperties.getUserSearchEndPoint(), registryRequest);
+                tagRes.put(sRequest.getField(), responseEntity.getBody());
 
             }
-
-            MultiSearchResponse multiSearchResponse = restHighLevelClient.msearch(request, RequestOptions.DEFAULT);
+            logger.info("user search tagRes -->"+mapper.writeValueAsString(tagRes));
 
             List<Object> finalRes = new ArrayList<>();
-            for(int i=0; i< multiSearchResponse.getResponses().length; i++){
-                SearchResponse searchResponse = multiSearchResponse.getResponses()[i].getResponse();
-
-                //logger.info("multi search searchResponse->"+searchResponse);
+            for(Map.Entry entry : tagRes.entrySet()){
                 Map<String, Object> resObjects = new HashMap<>();
-                List<Object> results = new ArrayList<>();
-                for (SearchHit hit : searchResponse.getHits()) {
-                    results.add(hit.getSourceAsMap());
-                }
-                resObjects.put("field",tags.get(i));
-                resObjects.put("results", results);
+                resObjects.put("field",entry.getKey());
+                resObjects.put("results", entry.getValue());
                 finalRes.add(resObjects);
-
-
             }
+
             response.put(Constants.ResponseStatus.MESSAGE, Constants.ResponseStatus.SUCCESSFUL);
             response.put(Constants.ResponseStatus.DATA, finalRes);
             response.put(Constants.ResponseStatus.STATUS, HttpStatus.OK);
