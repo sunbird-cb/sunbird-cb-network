@@ -106,7 +106,7 @@ public class ProfileService implements IProfileService {
                 Map<String, Object> additionalProperties = new HashMap<>();
                 additionalProperties.put(sRequest.getField(),sRequest.getValues().get(0));
                 searchQueryMap.put("query","");
-                searchQueryMap.put("filter",additionalProperties);
+                searchQueryMap.put("filters",additionalProperties);
                 searchQueryMap.put("offset",mSearchRequest.getOffset());
                 searchQueryMap.put("limit",mSearchRequest.getSize());
                 registryRequest.setRequest(searchQueryMap);
