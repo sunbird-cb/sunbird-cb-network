@@ -6,6 +6,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import org.elasticsearch.action.search.MultiSearchRequest;
 import org.elasticsearch.action.search.MultiSearchResponse;
 import org.elasticsearch.action.search.SearchRequest;
@@ -114,7 +117,14 @@ public class ProfileService implements IProfileService {
 
                 //Hit user search Api
                 ResponseEntity responseEntity = ProfileUtils.getResponseEntity(connectionProperties.getLearnerServiceHost(), connectionProperties.getUserSearchEndPoint(), registryRequest);
-                tagRes.put(sRequest.getField(), responseEntity.getBody());
+                JsonNode node = mapper.convertValue(responseEntity.getBody(), JsonNode.class);
+                ArrayNode arrayRes = JsonNodeFactory.instance.arrayNode();
+                ArrayNode nodes = (ArrayNode) node.get("result").get("response").get("content");
+                for (JsonNode n :nodes){
+                    arrayRes.add(n.get("profileDetails"));
+                }
+
+                tagRes.put(sRequest.getField(), arrayRes);
 
             }
             logger.info("user search tagRes -->"+mapper.writeValueAsString(tagRes));
