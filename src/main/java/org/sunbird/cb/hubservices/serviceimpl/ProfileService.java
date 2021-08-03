@@ -9,6 +9,7 @@ import java.util.stream.Stream;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.elasticsearch.action.search.MultiSearchRequest;
 import org.elasticsearch.action.search.MultiSearchResponse;
 import org.elasticsearch.action.search.SearchRequest;
@@ -103,11 +104,13 @@ public class ProfileService implements IProfileService {
 
             for(Search sRequest: mSearchRequest.getSearch()) {
 
+                StringBuilder searchPath = new StringBuilder();
+                searchPath.append("profileDetails.").append(sRequest.getField());
                 //Prepare of SearchDTO
                 RegistryRequest registryRequest = new RegistryRequest();
                 Map<String, Object> searchQueryMap = new HashMap<>();
                 Map<String, Object> additionalProperties = new HashMap<>();
-                additionalProperties.put(sRequest.getField(),sRequest.getValues().get(0));
+                additionalProperties.put(searchPath.toString(),sRequest.getValues().get(0));
                 searchQueryMap.put("query","");
                 searchQueryMap.put("filters",additionalProperties);
                 searchQueryMap.put("offset",mSearchRequest.getOffset());
@@ -121,6 +124,7 @@ public class ProfileService implements IProfileService {
                 ArrayNode arrayRes = JsonNodeFactory.instance.arrayNode();
                 ArrayNode nodes = (ArrayNode) node.get("result").get("response").get("content");
                 for (JsonNode n :nodes){
+                    ((ObjectNode)n.get("profileDetails")).put("userId",n.get("userId").asText());
                     arrayRes.add(n.get("profileDetails"));
                 }
 
