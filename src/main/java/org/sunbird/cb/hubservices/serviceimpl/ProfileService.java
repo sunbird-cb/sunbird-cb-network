@@ -124,8 +124,13 @@ public class ProfileService implements IProfileService {
                 ArrayNode arrayRes = JsonNodeFactory.instance.arrayNode();
                 ArrayNode nodes = (ArrayNode) node.get("result").get("response").get("content");
                 for (JsonNode n :nodes){
-                    ((ObjectNode)n.get("profileDetails")).put("userId",n.get("userId").asText());
-                    arrayRes.add(n.get("profileDetails"));
+                    if(!connectionIdsToExclude.contains(n.get("userId").asText())){
+                        ((ObjectNode)n.get("profileDetails")).put("userId",n.get("userId").asText());
+                        ((ObjectNode)n.get("profileDetails")).put("id",n.get("userId").asText());
+                        ((ObjectNode)n.get("profileDetails")).put("@id",n.get("userId").asText());
+
+                        arrayRes.add(n.get("profileDetails"));
+                    }
                 }
 
                 tagRes.put(sRequest.getField(), arrayRes);
