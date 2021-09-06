@@ -14,8 +14,8 @@ public class NotificationEventV2 implements Serializable {
 	//recipients ids
 	private List<String> ids = new ArrayList<>();
 
-	private NotificationConfigV2 configV2 = new NotificationConfigV2();
-	private NotificationTemplateV2 templateV2 = new NotificationTemplateV2();
+	private NotificationConfigV2 config = new NotificationConfigV2();
+	private NotificationTemplateV2 template = new NotificationTemplateV2();
 
 
 	public String getMode() {
@@ -42,19 +42,19 @@ public class NotificationEventV2 implements Serializable {
 		this.ids = ids;
 	}
 
-	public NotificationConfigV2 getConfigV2() {
-		return configV2;
+	public NotificationConfigV2 getConfig() {
+		return config;
 	}
 
-	public void setConfigV2(NotificationConfigV2 configV2) {
-		this.configV2 = configV2;
+	public void setConfig(NotificationConfigV2 config) {
+		this.config = config;
 	}
 
-	public NotificationTemplateV2 getTemplateV2() {
-		return templateV2;
+	public NotificationTemplateV2 getTemplate() {
+		return template;
 	}
 
-	public void setTemplateV2(NotificationTemplateV2 templateV2) {
-		this.templateV2 = templateV2;
+	public void setTemplate(NotificationTemplateV2 template) {
+		this.template = template;
 	}
 }
