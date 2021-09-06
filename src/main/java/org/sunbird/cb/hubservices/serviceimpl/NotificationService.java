@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.sunbird.cb.hubservices.exception.ApplicationException;
 import org.sunbird.cb.hubservices.model.*;
+import org.sunbird.cb.hubservices.profile.handler.ProfileUtils;
 import org.sunbird.cb.hubservices.service.INotificationService;
 import org.sunbird.cb.hubservices.util.ConnectionProperties;
 import org.sunbird.cb.hubservices.util.Constants;
@@ -37,6 +38,11 @@ public class NotificationService implements INotificationService {
 
 	@Autowired
 	private ProfileService profileService;
+
+	@Autowired
+	private ProfileUtils profileUtils;
+
+
 
 	@Override
 	public NotificationEvent buildEvent(String eventId, String sender, String reciepient, String status) {
@@ -74,13 +80,14 @@ public class NotificationService implements INotificationService {
 		String fromName = null;
 		try {
 			Response res = null;// profileService.findProfiles(Arrays.asList(uuid),null);
-			Map<String, Object> profiles = res.getResult();
-			if (profiles.size() > 0) {
+			Map<String, Object> profile = profileUtils.getUserProfiles(Arrays.asList(uuid)).get(0);
 
-				ArrayNode dataNodes = mapper.convertValue(profiles.get(Constants.ResponseStatus.DATA), ArrayNode.class);
-				logger.info("dataNodes :-{}", dataNodes);
+			if (profile!=null) {
 
-				JsonNode profilePersonalDetails = dataNodes.get(0).get(Constants.Profile.PERSONAL_DETAILS);
+				JsonNode dataNode = mapper.convertValue(profile, JsonNode.class);
+				logger.info("profile dataNode :-{}", dataNode);
+
+				JsonNode profilePersonalDetails = dataNode.get(Constants.Profile.PERSONAL_DETAILS);
 				fromName = profilePersonalDetails.get(Constants.Profile.FIRST_NAME).asText().concat(" ")
 						.concat(profilePersonalDetails.get(Constants.Profile.SUR_NAME).asText());
 
@@ -109,13 +116,13 @@ public class NotificationService implements INotificationService {
 			RestTemplate restTemplate = new RestTemplate();
 			HttpHeaders headers = new HttpHeaders();
 			headers.set("Content-Type", "application/json");
-			logger.info("Notification event v2 value ::", mapper.writeValueAsString(notificationEventv2));
+			logger.info("Notification event v2 value ::"+ mapper.writeValueAsString(notificationEventv2));
 
 			Map<String, List<NotificationEventV2>> notifications = new HashMap<>();
 			notifications.put("notifications", Arrays.asList(notificationEventv2));
 			Map<String, Object> nrequest = new HashMap<>();
 			nrequest.put("request", notifications);
-			logger.info("Notification event v2 request ::", mapper.writeValueAsString(nrequest));
+			logger.info("Notification event v2 request ::"+ mapper.writeValueAsString(nrequest));
 
 			HttpEntity request = new HttpEntity<>(nrequest, headers);
 			response = restTemplate.exchange(uri, HttpMethod.POST, request, String.class);
@@ -166,12 +173,18 @@ public class NotificationService implements INotificationService {
 		eventV2.setMode(connectionProperties.getNotificationv2Mode());
 		eventV2.setDeliveryType(connectionProperties.getNotificationv2DeliveryType());
 		List<String> toList = notificationEvent.getRecipients().get(connectionProperties.getNotificationTemplateReciepient());
+		//replace recipient ids to email ids
+		List<Map<String,Object>> profiles = profileUtils.getUserProfiles(toList);
+		toList.clear();
+		profiles.forEach(profile -> {
+			toList.add(((Map<String,Object>)profile.get(Constants.Profile.PERSONAL_DETAILS)).get("primaryEmail").toString());
+		});
 		eventV2.setIds(toList);
 
 		NotificationConfigV2 configV2 = new NotificationConfigV2();
 		configV2.setSender(connectionProperties.getNotificationv2Sender());
 		configV2.setSubject(notificationEvent.getEventId());
-		eventV2.setConfigV2(configV2);
+		eventV2.setConfig(configV2);
 
 		NotificationTemplateV2 templateV2 = new NotificationTemplateV2();
 		templateV2.setId(connectionProperties.getNotificationv2Id());
@@ -182,7 +195,7 @@ public class NotificationService implements INotificationService {
 			params.put("body", replaceWith(connectionProperties.getNotificationv2ResponseBody(), notificationEvent.getTagValues()));
 
 		templateV2.setParams(params);
-		eventV2.setTemplateV2(templateV2);
+		eventV2.setTemplate(templateV2);
 		return eventV2;
 	}
 
@@ -190,10 +203,10 @@ public class NotificationService implements INotificationService {
 	private String replaceWith(String templateStr, Map<String, Object> tagValues) {
 		for (Map.Entry entry : tagValues.entrySet()) {
 			if (templateStr.contains(entry.getKey().toString())) {
-				templateStr.replace(entry.getKey().toString(), entry.getValue().toString());
+				templateStr = templateStr.replace(entry.getKey().toString(), entry.getValue().toString());
 			}
 		}
-		logger.info("replaceWith value ::", templateStr);
+		logger.info("replaceWith value ::"+ templateStr);
 		return templateStr;
 	}
 }
