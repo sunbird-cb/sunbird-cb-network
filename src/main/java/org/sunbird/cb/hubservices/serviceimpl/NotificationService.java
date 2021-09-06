@@ -97,7 +97,7 @@ public class NotificationService implements INotificationService {
 	}
 
 	@Override
-	public ResponseEntity postEvent(String rootOrg, NotificationEvent notificationEvent) {
+	public ResponseEntity postEvent(String rootOrg, NotificationEventV2 notificationEventv2) {
 		if (rootOrg == null || rootOrg.isEmpty()) {
 			throw new ApplicationException(Constants.Message.ROOT_ORG_INVALID);
 		}
@@ -109,13 +109,10 @@ public class NotificationService implements INotificationService {
 			RestTemplate restTemplate = new RestTemplate();
 			HttpHeaders headers = new HttpHeaders();
 			headers.set("Content-Type", "application/json");
-
-			//translate NotificationEvent to NotificationEventV2
-			NotificationEventV2 eventV2 = translate(notificationEvent);
-			logger.info("Notification event v2 translation value ::", mapper.writeValueAsString(eventV2));
+			logger.info("Notification event v2 value ::", mapper.writeValueAsString(notificationEventv2));
 
 			Map<String, List<NotificationEventV2>> notifications = new HashMap<>();
-			notifications.put("notifications", Arrays.asList(eventV2));
+			notifications.put("notifications", Arrays.asList(notificationEventv2));
 			Map<String, Object> nrequest = new HashMap<>();
 			nrequest.put("request",notifications);
 			logger.info("Notification event v2 request ::", mapper.writeValueAsString(nrequest));
@@ -134,7 +131,36 @@ public class NotificationService implements INotificationService {
 
 	}
 
-	private NotificationEventV2 translate(NotificationEvent notificationEvent){
+	@Override
+	public ResponseEntity postEvent(String rootOrg, NotificationEvent notificationEvent) {
+		if (rootOrg == null || rootOrg.isEmpty()) {
+			throw new ApplicationException(Constants.Message.ROOT_ORG_INVALID);
+		}
+
+		ResponseEntity<?> response = null;
+		try {
+			final String uri = connectionProperties.getNotificationIp()
+					.concat(connectionProperties.getNotificationEventEndpoint());
+			RestTemplate restTemplate = new RestTemplate();
+			HttpHeaders headers = new HttpHeaders();
+			headers.set("Content-Type", "application/json");
+
+			HttpEntity request = new HttpEntity<>(notificationEvent, headers);
+			response = restTemplate.exchange(uri, HttpMethod.POST, request, String.class);
+
+			logger.info(Constants.Message.SENT_NOTIFICATION_SUCCESS, response.getStatusCode());
+
+		} catch (Exception e) {
+			logger.error(Constants.Message.SENT_NOTIFICATION_ERROR, e.getMessage());
+			return new ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR);
+
+		}
+		return response;
+
+	}
+
+	@Override
+	public NotificationEventV2 translate(NotificationEvent notificationEvent){
 
 		NotificationEventV2 eventV2 = new NotificationEventV2();
 		eventV2.setMode(connectionProperties.getNotificationv2Mode());
@@ -161,17 +187,13 @@ public class NotificationService implements INotificationService {
 	}
 
 
-	private String replaceWith(String templateStr, Map<String, Object> tagValues){
-
-		for(Map.Entry entry: tagValues.entrySet()){
-
-			if(templateStr.contains(entry.getKey().toString())){
-
+	private String replaceWith(String templateStr, Map<String, Object> tagValues) {
+		for (Map.Entry entry : tagValues.entrySet()) {
+			if (templateStr.contains(entry.getKey().toString())) {
 				templateStr.replace(entry.getKey().toString(), entry.getValue().toString());
 			}
-
 		}
+		logger.info("replaceWith value ::", templateStr);
 		return templateStr;
-
 	}
 }

@@ -16,10 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.sunbird.cb.hubservices.exception.ApplicationException;
 import org.sunbird.cb.hubservices.exception.BadRequestException;
-import org.sunbird.cb.hubservices.model.ConnectionRequest;
-import org.sunbird.cb.hubservices.model.Node;
-import org.sunbird.cb.hubservices.model.NotificationEvent;
-import org.sunbird.cb.hubservices.model.Response;
+import org.sunbird.cb.hubservices.model.*;
 import org.sunbird.cb.hubservices.profile.handler.IProfileRequestHandler;
 import org.sunbird.cb.hubservices.profile.handler.ProfileUtils;
 import org.sunbird.cb.hubservices.profile.handler.RegistryRequest;
@@ -150,7 +147,8 @@ public class ConnectionService implements IConnectionService {
 	@Override
 	public void sendNotification(String rootOrg, String eventId, String sender, String reciepient, String status) {
 		NotificationEvent event = notificationService.buildEvent(eventId, sender, reciepient, status);
-		notificationService.postEvent(rootOrg, event);
+		NotificationEventV2 eventV2 = notificationService.translate(event);
+		notificationService.postEvent(rootOrg, eventV2);
 	}
 
 	@Override

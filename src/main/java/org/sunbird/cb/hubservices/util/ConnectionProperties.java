@@ -27,7 +27,7 @@ public class ConnectionProperties {
 	@Value("${es.profile.source.fields}")
 	private String[] esProfileSourceFields;
 
-	@Value("${notification.ip}")
+	@Value("${notification.service.host}")
 	private String notificationIp;
 
 	@Value("${notification.event.endpoint}")
