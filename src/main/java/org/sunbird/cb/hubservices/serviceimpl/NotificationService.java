@@ -16,8 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.sunbird.cb.hubservices.exception.ApplicationException;
-import org.sunbird.cb.hubservices.model.NotificationEvent;
-import org.sunbird.cb.hubservices.model.Response;
+import org.sunbird.cb.hubservices.model.*;
 import org.sunbird.cb.hubservices.service.INotificationService;
 import org.sunbird.cb.hubservices.util.ConnectionProperties;
 import org.sunbird.cb.hubservices.util.Constants;
@@ -98,6 +97,41 @@ public class NotificationService implements INotificationService {
 	}
 
 	@Override
+	public ResponseEntity postEvent(String rootOrg, NotificationEventV2 notificationEventv2) {
+		if (rootOrg == null || rootOrg.isEmpty()) {
+			throw new ApplicationException(Constants.Message.ROOT_ORG_INVALID);
+		}
+
+		ResponseEntity<?> response = null;
+		try {
+			final String uri = connectionProperties.getNotificationIp()
+					.concat(connectionProperties.getNotificationEventEndpoint());
+			RestTemplate restTemplate = new RestTemplate();
+			HttpHeaders headers = new HttpHeaders();
+			headers.set("Content-Type", "application/json");
+			logger.info("Notification event v2 value ::", mapper.writeValueAsString(notificationEventv2));
+
+			Map<String, List<NotificationEventV2>> notifications = new HashMap<>();
+			notifications.put("notifications", Arrays.asList(notificationEventv2));
+			Map<String, Object> nrequest = new HashMap<>();
+			nrequest.put("request",notifications);
+			logger.info("Notification event v2 request ::", mapper.writeValueAsString(nrequest));
+
+			HttpEntity request = new HttpEntity<>(nrequest, headers);
+			response = restTemplate.exchange(uri, HttpMethod.POST, request, String.class);
+
+			logger.info(Constants.Message.SENT_NOTIFICATION_SUCCESS, response.getStatusCode());
+
+		} catch (Exception e) {
+			logger.error(Constants.Message.SENT_NOTIFICATION_ERROR, e.getMessage());
+			return new ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR);
+
+		}
+		return response;
+
+	}
+
+	@Override
 	public ResponseEntity postEvent(String rootOrg, NotificationEvent notificationEvent) {
 		if (rootOrg == null || rootOrg.isEmpty()) {
 			throw new ApplicationException(Constants.Message.ROOT_ORG_INVALID);
@@ -109,7 +143,8 @@ public class NotificationService implements INotificationService {
 					.concat(connectionProperties.getNotificationEventEndpoint());
 			RestTemplate restTemplate = new RestTemplate();
 			HttpHeaders headers = new HttpHeaders();
-			headers.set(Constants.Parmeters.ROOT_ORG, rootOrg);
+			headers.set("Content-Type", "application/json");
+
 			HttpEntity request = new HttpEntity<>(notificationEvent, headers);
 			response = restTemplate.exchange(uri, HttpMethod.POST, request, String.class);
 
@@ -122,5 +157,43 @@ public class NotificationService implements INotificationService {
 		}
 		return response;
 
+	}
+
+	@Override
+	public NotificationEventV2 translate(NotificationEvent notificationEvent){
+
+		NotificationEventV2 eventV2 = new NotificationEventV2();
+		eventV2.setMode(connectionProperties.getNotificationv2Mode());
+		eventV2.setDeliveryType(connectionProperties.getNotificationv2DeliveryType());
+		List<String> toList = notificationEvent.getRecipients().get(connectionProperties.getNotificationTemplateReciepient());
+		eventV2.setIds(toList);
+
+		NotificationConfigV2 configV2 = new NotificationConfigV2();
+		configV2.setSender(connectionProperties.getNotificationv2Sender());
+		configV2.setSubject(notificationEvent.getEventId());
+		eventV2.setConfigV2(configV2);
+
+		NotificationTemplateV2 templateV2 = new NotificationTemplateV2();
+		templateV2.setId(connectionProperties.getNotificationv2Id());
+		Map <String, String> params = new HashMap<>();
+		if(notificationEvent.getEventId().equals(connectionProperties.getNotificationTemplateRequest()))
+			params.put("body", replaceWith(connectionProperties.getNotificationv2RequestBody(), notificationEvent.getTagValues()));
+		else
+			params.put("body", replaceWith(connectionProperties.getNotificationv2ResponseBody(), notificationEvent.getTagValues()));
+
+		templateV2.setParams(params);
+		eventV2.setTemplateV2(templateV2);
+		return eventV2;
+	}
+
+
+	private String replaceWith(String templateStr, Map<String, Object> tagValues) {
+		for (Map.Entry entry : tagValues.entrySet()) {
+			if (templateStr.contains(entry.getKey().toString())) {
+				templateStr.replace(entry.getKey().toString(), entry.getValue().toString());
+			}
+		}
+		logger.info("replaceWith value ::", templateStr);
+		return templateStr;
 	}
 }

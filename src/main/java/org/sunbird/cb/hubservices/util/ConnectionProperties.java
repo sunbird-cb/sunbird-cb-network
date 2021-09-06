@@ -27,7 +27,7 @@ public class ConnectionProperties {
 	@Value("${es.profile.source.fields}")
 	private String[] esProfileSourceFields;
 
-	@Value("${notification.ip}")
+	@Value("${notification.service.host}")
 	private String notificationIp;
 
 	@Value("${notification.event.endpoint}")
@@ -53,6 +53,24 @@ public class ConnectionProperties {
 
 	@Value("${notification.template.status}")
 	private String notificationTemplateStatus;
+
+	@Value("${notification.template.v2.sender}")
+	private String notificationv2Sender;
+
+	@Value("${notification.template.v2.id}")
+	private String notificationv2Id;
+
+	@Value("${notification.template.v2.delivery.type}")
+	private String notificationv2DeliveryType;
+
+	@Value("${notification.template.v2.mode}")
+	private String notificationv2Mode;
+
+	@Value("${notification.template.v2.request.body}")
+	private String notificationv2RequestBody;
+
+	@Value("${notification.template.v2.response.body}")
+	private String notificationv2ResponseBody;
 
 	@Value("${notification.enabled}")
 	private boolean notificationEnabled;
@@ -118,6 +136,30 @@ public class ConnectionProperties {
 		return notificationTemplateReciepient;
 	}
 
+	public String getNotificationv2Sender() {
+		return notificationv2Sender;
+	}
+
+	public String getNotificationv2Id() {
+		return notificationv2Id;
+	}
+
+	public String getNotificationv2DeliveryType() {
+		return notificationv2DeliveryType;
+	}
+
+	public String getNotificationv2RequestBody() {
+		return notificationv2RequestBody;
+	}
+
+	public String getNotificationv2ResponseBody() {
+		return notificationv2ResponseBody;
+	}
+
+	public String getNotificationv2Mode() {
+		return notificationv2Mode;
+	}
+
 	public String getNotificationTemplateRequest() {
 		return notificationTemplateRequest;
 	}
@@ -141,4 +183,10 @@ public class ConnectionProperties {
 	public boolean isNotificationEnabled() {
 		return notificationEnabled;
 	}
+
+
+
+
+
+
 }
