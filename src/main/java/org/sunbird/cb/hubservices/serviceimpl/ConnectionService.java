@@ -147,8 +147,7 @@ public class ConnectionService implements IConnectionService {
 	@Override
 	public void sendNotification(String rootOrg, String eventId, String sender, String reciepient, String status) {
 		NotificationEvent event = notificationService.buildEvent(eventId, sender, reciepient, status);
-		NotificationEventV2 eventV2 = notificationService.translate(event);
-		notificationService.postEvent(rootOrg, eventV2);
+		notificationService.postEvent(rootOrg, notificationService.translate(event));
 	}
 
 	@Override
