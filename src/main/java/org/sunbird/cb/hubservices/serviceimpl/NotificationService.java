@@ -114,7 +114,7 @@ public class NotificationService implements INotificationService {
 			Map<String, List<NotificationEventV2>> notifications = new HashMap<>();
 			notifications.put("notifications", Arrays.asList(notificationEventv2));
 			Map<String, Object> nrequest = new HashMap<>();
-			nrequest.put("request",notifications);
+			nrequest.put("request", notifications);
 			logger.info("Notification event v2 request ::", mapper.writeValueAsString(nrequest));
 
 			HttpEntity request = new HttpEntity<>(nrequest, headers);
@@ -160,7 +160,7 @@ public class NotificationService implements INotificationService {
 	}
 
 	@Override
-	public NotificationEventV2 translate(NotificationEvent notificationEvent){
+	public NotificationEventV2 translate(NotificationEvent notificationEvent) {
 
 		NotificationEventV2 eventV2 = new NotificationEventV2();
 		eventV2.setMode(connectionProperties.getNotificationv2Mode());
@@ -175,8 +175,8 @@ public class NotificationService implements INotificationService {
 
 		NotificationTemplateV2 templateV2 = new NotificationTemplateV2();
 		templateV2.setId(connectionProperties.getNotificationv2Id());
-		Map <String, String> params = new HashMap<>();
-		if(notificationEvent.getEventId().equals(connectionProperties.getNotificationTemplateRequest()))
+		Map<String, String> params = new HashMap<>();
+		if (notificationEvent.getEventId().equals(connectionProperties.getNotificationTemplateRequest()))
 			params.put("body", replaceWith(connectionProperties.getNotificationv2RequestBody(), notificationEvent.getTagValues()));
 		else
 			params.put("body", replaceWith(connectionProperties.getNotificationv2ResponseBody(), notificationEvent.getTagValues()));
