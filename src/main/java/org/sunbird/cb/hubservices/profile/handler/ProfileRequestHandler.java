@@ -78,35 +78,38 @@ public class ProfileRequestHandler implements IProfileRequestHandler {
 			e.printStackTrace();
 		}
 		// merge request and search to add osid(s)
-		for (Map<String, Object> request : requests) {
-			String osid = StringUtils.isEmpty(request.get("osid")) == true ? "" : request.get("osid").toString();
-			Map<String, Object> toChange = new HashMap<>();
-			Object sf = search.get(request.get("fieldKey"));
-
-			if (sf instanceof ArrayList) {
-				List<Map<String, Object>> searchFields = (ArrayList) search.get((String) request.get("fieldKey"));
-				for (Map<String, Object> obj : searchFields) {
-					if (obj.get("osid").toString().equalsIgnoreCase(osid))
-						toChange.putAll(obj);
-				}
-			}
-			if (sf instanceof HashMap) {
-				Map<String, Object> searchFields = (Map<String, Object>) search.get((String) request.get("fieldKey"));
-				toChange.putAll(searchFields);
-
-			}
-
-			Map<String, Object> objectMap = (Map<String, Object>) request.get("toValue");
-			for (Map.Entry entry : objectMap.entrySet())
-				toChange.put((String) entry.getKey(), entry.getValue());
-
-			profileUtils.mergeLeaf(search, toChange, request.get("fieldKey").toString(), osid);
-		}
 		try {
-			logger.info("profile merged changes {}:", mapper.writeValueAsString(search));
-		} catch (JsonProcessingException e) {
-			e.printStackTrace();
+			for (Map<String, Object> request : requests) {
+
+				String osid = request.get("osid") == null ? "" : request.get("osid").toString();
+				Map<String, Object> toChange = new HashMap<>();
+				Object sf = search.get(request.get("fieldKey"));
+
+				if (sf instanceof ArrayList) {
+					List<Map<String, Object>> searchFields = (ArrayList) search.get((String) request.get("fieldKey"));
+					for (Map<String, Object> obj : searchFields) {
+						if (obj.get("osid") !=null && obj.get("osid").toString().equalsIgnoreCase(osid))
+							toChange.putAll(obj);
+					}
+				}
+				if (sf instanceof HashMap) {
+					Map<String, Object> searchFields = (Map<String, Object>) search.get((String) request.get("fieldKey"));
+					toChange.putAll(searchFields);
+
+				}
+
+				Map<String, Object> objectMap = (Map<String, Object>) request.get("toValue");
+				for (Map.Entry entry : objectMap.entrySet())
+					toChange.put((String) entry.getKey(), entry.getValue());
+
+				profileUtils.mergeLeaf(search, toChange, request.get("fieldKey").toString(), osid);
+			}
+
+		}catch (Exception e){
+		    //e.printStackTrace();
+		    logger.error("Merge leaf exception::{}",e);
 		}
+    logger.info("profile merged changes :- {}" , mapper.writeValueAsString(search));
 		return search;
 	}
 
