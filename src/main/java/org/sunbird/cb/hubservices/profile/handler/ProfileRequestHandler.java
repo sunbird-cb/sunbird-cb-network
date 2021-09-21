@@ -1,10 +1,7 @@
 package org.sunbird.cb.hubservices.profile.handler;
 
-import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,7 +11,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 public class ProfileRequestHandler implements IProfileRequestHandler {
@@ -72,6 +71,12 @@ public class ProfileRequestHandler implements IProfileRequestHandler {
 //				.get(ProfileUtils.Profile.USER_PROFILE);
 
 		Map<String, Object> search = profileUtils.getUserProfiles(Arrays.asList(uuid)).get(0);
+		ObjectMapper mapper = new ObjectMapper();
+		try {
+			logger.info("profile response : {}", mapper.writeValueAsString(search));
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+		}
 		// merge request and search to add osid(s)
 		try {
 			for (Map<String, Object> request : requests) {
@@ -101,10 +106,10 @@ public class ProfileRequestHandler implements IProfileRequestHandler {
 			}
 
 		}catch (Exception e){
-		    e.printStackTrace();
+		    //e.printStackTrace();
 		    logger.error("Merge leaf exception::{}",e);
 		}
-        	logger.info("modified search :- {}" , search);
+    logger.info("profile merged changes :- {}" , mapper.writeValueAsString(search));
 		return search;
 	}
 

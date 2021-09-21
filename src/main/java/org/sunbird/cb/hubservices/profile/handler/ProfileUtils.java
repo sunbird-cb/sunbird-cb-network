@@ -1,8 +1,5 @@
 package org.sunbird.cb.hubservices.profile.handler;
 
-import java.util.*;
-import java.util.stream.Collectors;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.http.client.HttpClient;
@@ -11,16 +8,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
-import org.springframework.util.CollectionUtils;
 import org.springframework.web.client.RestTemplate;
 import org.sunbird.cb.hubservices.util.ConnectionProperties;
+
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Component
 public class ProfileUtils {
@@ -207,8 +202,13 @@ public class ProfileUtils {
                 requestEntity,
                 Map.class
         );
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            logger.info("profile update response :: {}", mapper.writeValueAsString(responseEntity.getBody()));
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
         return new ResponseEntity<>(responseEntity.getBody(), responseEntity.getStatusCode());
-
     }
     private Map<String, Object> getSearchObject(List<String> userIds) {
         Map<String, Object> request = new HashMap<>();
