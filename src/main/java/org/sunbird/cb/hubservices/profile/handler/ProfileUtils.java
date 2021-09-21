@@ -114,9 +114,9 @@ public class ProfileUtils {
 
         for (String key : mapLeft.keySet()) {
 
-            if(key.equalsIgnoreCase(leafKey) && (mapLeft.get(key) instanceof ArrayList)){
+            if(key.equalsIgnoreCase(leafKey) && (mapLeft.get(key) instanceof ArrayList) && !id.isEmpty()){
 
-                ((ArrayList)mapLeft.get(key)).removeIf(o -> ((Map)o).get("osid").toString().equalsIgnoreCase(id));
+                ((ArrayList)mapLeft.get(key)).removeIf(o -> ((Map)o).get("osid") !=null &&((Map)o).get("osid").toString().equalsIgnoreCase(id));
                 ((ArrayList)mapLeft.get(key)).add(mapRight);
 
             }
