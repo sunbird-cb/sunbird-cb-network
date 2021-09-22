@@ -70,9 +70,12 @@ public class ProfileRequestHandler implements IProfileRequestHandler {
 //		Object searchResult = ((Map<String, Object>) ((Map<String, Object>) responseEntity.getBody()).get("result"))
 //				.get(ProfileUtils.Profile.USER_PROFILE);
 
-		Map<String, Object> search = profileUtils.getUserProfiles(Arrays.asList(uuid)).get(0);
+		final ObjectMapper mapper = new ObjectMapper();
+		Map<String, Object> search = new HashMap<>();
 		// merge request and search to add osid(s)
 		try {
+			search = profileUtils.getUserProfiles(Arrays.asList(uuid)).get(0);
+			logger.info("profile orginal :- {}" , mapper.convertValue(search, JsonNode.class));
 			for (Map<String, Object> request : requests) {
 
 				String osid = request.get("osid") == null ? "" : request.get("osid").toString();
@@ -98,12 +101,11 @@ public class ProfileRequestHandler implements IProfileRequestHandler {
 
 				profileUtils.mergeLeaf(search, toChange, request.get("fieldKey").toString(), osid);
 			}
-
+			logger.info("profile merged changes :- {}" , mapper.convertValue(search, JsonNode.class));
 		}catch (Exception e){
 		    //e.printStackTrace();
-		    logger.error("Merge leaf exception::{}",e);
+		    logger.error("Merge profile exception::{}",e);
 		}
-    		logger.info("profile merged changes :- {}" , search);
 		return search;
 	}
 
