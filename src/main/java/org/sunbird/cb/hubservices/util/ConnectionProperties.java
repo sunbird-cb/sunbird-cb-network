@@ -84,6 +84,9 @@ public class ConnectionProperties {
 	@Value("${sunbird.user.update.endpoint}")
 	private String userUpdateEndPoint;
 
+	@Value("${sunbird.user.read.endpoint}")
+	private String userReadEndPoint;
+
 	public String getEsProfileIndex() {
 		return esProfileIndex;
 	}
@@ -185,8 +188,7 @@ public class ConnectionProperties {
 	}
 
 
-
-
-
-
+	public String getUserReadEndPoint() {
+		return userReadEndPoint;
+	}
 }

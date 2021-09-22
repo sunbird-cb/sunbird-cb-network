@@ -76,7 +76,7 @@ public class ProfileRequestHandler implements IProfileRequestHandler {
 		Map<String, Object> search = new HashMap<>();
 		// merge request and search to add osid(s)
 		try {
-			search = profileUtils.getUserProfiles(Arrays.asList(uuid)).get(0);
+			search = profileUtils.readUserProfiles(uuid);
 			logger.info("profile orginal :- {}" , mapper.convertValue(search, JsonNode.class));
 			for (Map<String, Object> request : requests) {
 

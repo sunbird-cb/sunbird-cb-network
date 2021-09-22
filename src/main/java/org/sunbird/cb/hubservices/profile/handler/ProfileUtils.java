@@ -1,6 +1,7 @@
 package org.sunbird.cb.hubservices.profile.handler;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.http.client.HttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
@@ -177,6 +178,28 @@ public class ProfileUtils {
             }
         }
         return Collections.emptyList();
+    }
+
+    public Map<String, Object> readUserProfiles(String userId){
+        StringBuilder builderUrl = new StringBuilder();
+        builderUrl.append(connectionProperties.getLearnerServiceHost()).append(connectionProperties.getUserReadEndPoint()).append(userId);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<String> entity = new HttpEntity<String>("parameters", headers);
+        ResponseEntity responseEntity = restTemplate.exchange(builderUrl.toString(), HttpMethod.GET, entity,
+                Map.class);
+
+        Map<String, Object> profileResponse = (Map<String, Object>)responseEntity.getBody();
+        if (profileResponse != null && "OK".equalsIgnoreCase((String) profileResponse.get("responseCode"))) {
+            Map<String, Object> map = (Map<String, Object>) profileResponse.get("result");
+            if(map.get("response") != null){
+                return  (Map<String, Object>)((Map<String, Object>) map.get("response")).get("profileDetails");
+
+            }
+        }
+
+        return Collections.emptyMap();
     }
 
     public ResponseEntity updateProfile(String uuid, Map<String, Object> profileObj){
