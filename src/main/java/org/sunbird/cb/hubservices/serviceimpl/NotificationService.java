@@ -175,11 +175,11 @@ public class NotificationService implements INotificationService {
 		List<String> toList = notificationEvent.getRecipients().get(connectionProperties.getNotificationTemplateReciepient());
 		//replace recipient ids to email ids
 		List<Map<String,Object>> profiles = profileUtils.getUserProfiles(toList);
-		toList.clear();
+		List<String> toListMails = new ArrayList<>();
 		profiles.forEach(profile -> {
-			toList.add(((Map<String,Object>)profile.get(Constants.Profile.PERSONAL_DETAILS)).get("primaryEmail").toString());
+			toListMails.add(((Map<String,Object>)profile.get(Constants.Profile.PERSONAL_DETAILS)).get("primaryEmail").toString());
 		});
-		eventV2.setIds(toList);
+		eventV2.setIds(toListMails);
 
 		NotificationConfigV2 configV2 = new NotificationConfigV2();
 		configV2.setSender(connectionProperties.getNotificationv2Sender());
