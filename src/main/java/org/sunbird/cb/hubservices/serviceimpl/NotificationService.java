@@ -132,7 +132,7 @@ public class NotificationService implements INotificationService {
 			logger.info(Constants.Message.SENT_NOTIFICATION_SUCCESS, response.getStatusCode());
 
 		} catch (Exception e) {
-			logger.error(Constants.Message.SENT_NOTIFICATION_ERROR, e.getMessage());
+			logger.error(Constants.Message.SENT_NOTIFICATION_ERROR : {}, e);
 			return new ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR);
 
 		}
