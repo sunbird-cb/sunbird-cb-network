@@ -13,6 +13,6 @@ public interface IGraphDao {
 
     public void upsertRelation(String fromUUID, String toUUID, Map<String, String> relationProperties) throws DaoLayerException;
 
-    public List<Node> getNeighbours(String UUID, Map<String, String> relationProperties, Constants.DIRECTION direction) throws DaoLayerException;
+    public List<Node> getNeighbours(String UUID, Map<String, String> relationProperties, Constants.DIRECTION direction, int offset, int limit) throws DaoLayerException;
 
 }

@@ -1,6 +1,6 @@
 package org.sunbird.cb.hubservices.exception;
 
-public class DaoLayerException extends RuntimeException {
+public class NoRecordFoundException extends DaoLayerException {
 
 	private static final long serialVersionUID = 1L;
 
@@ -11,7 +11,7 @@ public class DaoLayerException extends RuntimeException {
 
 	private final String message;
 
-	public DaoLayerException(String message) {
+	public NoRecordFoundException(String message) {
 		super(message);
 		this.message = message;
 	}
