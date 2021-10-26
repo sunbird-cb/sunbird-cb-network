@@ -1,19 +1,18 @@
 package org.sunbird.hubservices.dao;
 
-import org.neo4j.driver.v1.Record;
-import org.neo4j.driver.v1.exceptions.ClientException;
+import org.sunbird.cb.hubservices.exception.DaoLayerException;
+import org.sunbird.cb.hubservices.model.Node;
+import org.sunbird.cb.hubservices.util.Constants;
 
 import java.util.List;
+import java.util.Map;
 
 public interface IGraphDao {
 
-    public void upsertNode(String UUID) throws ClientException;
+    public void upsertNode(Node node) throws DaoLayerException;
 
-    public void upsertRelation(String fromUUID, String toUUID, String propertyName, String propertyValue) throws ClientException;
+    public void upsertRelation(String fromUUID, String toUUID, Map<String, String> relationProperties) throws DaoLayerException;
 
-    public List<Record> getAllNeighbours(String UUID) throws ClientException;
-
-    public List<Record> getNeighboursByRelation(String UUID, String propertyName, String propertyValue) throws ClientException;
-
+    public List<Node> getNeighbours(String UUID, Map<String, String> relationProperties, Constants.DIRECTION direction) throws DaoLayerException;
 
 }

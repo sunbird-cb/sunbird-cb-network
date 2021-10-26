@@ -1,14 +1,19 @@
 package org.sunbird.hubservices.daoimpl;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micrometer.core.instrument.util.StringUtils;
 import org.neo4j.driver.v1.*;
 import org.neo4j.driver.v1.exceptions.ClientException;
-import org.neo4j.driver.v1.exceptions.NoSuchRecordException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.CollectionUtils;
+import org.sunbird.cb.hubservices.exception.DaoLayerException;
+import org.sunbird.cb.hubservices.model.Node;
+import org.sunbird.cb.hubservices.util.Constants;
 import org.sunbird.hubservices.dao.IGraphDao;
 
+import javax.annotation.PostConstruct;
 import java.util.*;
 
 public class GraphDao implements IGraphDao {
@@ -18,90 +23,98 @@ public class GraphDao implements IGraphDao {
     @Autowired
     private Driver neo4jDriver;
 
-    private String nodeType;
+    private String label;
 
     @Autowired
-    public GraphDao(String nodeType) {
-        this.nodeType = nodeType;
+    public GraphDao(String label) {
+        this.label = label;
     }
 
-    @Override
-    public void upsertNode(String UUID) throws ClientException {
+    @PostConstruct
+    public void init() {
         Session session = neo4jDriver.session();
         Transaction transaction = session.beginTransaction();
 
         try {
-            if (StringUtils.isBlank(UUID)) {
-                throw new ClientException("UUID cannot be empty");
-            }
-
-            Map<String, Object> props = new HashMap<>();
-            props.put("id", UUID);
-            //props.put( "name", "tag-"+UUID );
-
-            Map<String, Object> params = new HashMap<>();
-            params.put("props", props);
-            params.put("uuid", UUID);
-
-            StringBuilder queryBuilder = new StringBuilder();
-            queryBuilder.append("MATCH (n:").append(nodeType).append(") WHERE n.id = $uuid RETURN n");
-            Statement statement = new Statement(queryBuilder.toString(), params);
-
-            StatementResult result = transaction.run(statement);
-            int recordSize = result.list().size();
-            logger.info("records {} ", recordSize);
-            result.consume();
-
-            if (recordSize == 0) {
-                queryBuilder = new StringBuilder();
-                queryBuilder.append("CREATE (n:").append(nodeType).append(") SET n = $props RETURN n");
-                statement = new Statement(queryBuilder.toString(), params);
-                result = transaction.run(statement);
-                result.consume();
-                transaction.commitAsync().toCompletableFuture();
-                logger.info("user node with id {} created successfully ", UUID);
-            } else {
-                logger.info("user node with id {} exist ", UUID);
-
-            }
+            Statement statement = new Statement("CREATE CONSTRAINT ON  (n:" + label + ") ASSERT n.id IS UNIQUE");
+            transaction.run(statement);
             transaction.close();
+            logger.info("Added user node unique constraint successfully ");
+
 
         } catch (ClientException e) {
             transaction.rollbackAsync().toCompletableFuture();
-            logger.error("user node upsertion failed : {}", e);
+            logger.error("Adding user node unique constraint failed : {}", e);
         }
         session.close();
     }
 
     @Override
-    public void upsertRelation(String fromUUID, String toUUID, String propertyName, String propertyValue) throws ClientException {
+    public void upsertNode(Node node) throws DaoLayerException {
         Session session = neo4jDriver.session();
         Transaction transaction = session.beginTransaction();
 
         try {
-            if (StringUtils.isBlank(fromUUID) || StringUtils.isBlank(toUUID) || StringUtils.isBlank(propertyName) || StringUtils.isBlank(propertyValue)) {
-                throw new ClientException("UUIDs or property cannot be empty");
+            if (node != null && StringUtils.isBlank(node.getIdentifier())) {
+                throw new DaoLayerException("Node identifier cannot be empty");
+            }
+
+            Map<String, Object> props = new HashMap<>();
+            props = new ObjectMapper().convertValue(node, Map.class);
+            props.put("id", node.getIdentifier());
+
+            Map<String, Object> params = new HashMap<>();
+            params.put("props", props);
+
+            StringBuilder queryBuilder = new StringBuilder();
+            queryBuilder.append("CREATE (n:").append(label).append(") SET n = $props RETURN n");
+
+            Statement statement = new Statement(queryBuilder.toString(), params);
+
+            StatementResult result = transaction.run(statement);
+            result.consume();
+            transaction.commitAsync().toCompletableFuture();
+            logger.info("user node with id {} created successfully ", node.getIdentifier());
+            transaction.close();
+
+        } catch (DaoLayerException e) {
+            transaction.rollbackAsync().toCompletableFuture();
+            logger.error("user node upsertion failed : {}", e);
+            throw e;
+        }
+        session.close();
+    }
+
+    @Override
+    public void upsertRelation(String fromUUID, String toUUID, Map<String, String> relationProperties) throws DaoLayerException {
+        Session session = neo4jDriver.session();
+        Transaction transaction = session.beginTransaction();
+
+        try {
+            if (StringUtils.isBlank(fromUUID) || StringUtils.isBlank(toUUID) || CollectionUtils.isEmpty(relationProperties)) {
+                throw new DaoLayerException("UUIDs or properties cannot be empty");
             }
 
             Map<String, Object> parameters = new HashMap<>();
             parameters.put("fromUUID", fromUUID);
             parameters.put("toUUID", toUUID);
-            parameters.put("propertyValue", propertyValue);
+            //parameters.put("propertyValue", propertyValue);
+            parameters.put("props", relationProperties);
 
             StringBuilder query = new StringBuilder();
-            query.append("MATCH (n:").append(nodeType).append("), (n1:").append(nodeType)
+            query.append("MATCH (n:").append(label).append("), (n1:").append(label)
                     .append(") WHERE n.id = $fromUUID AND n1.id = $toUUID RETURN n,n1");
             Statement statement = new Statement(query.toString(), parameters);
             StatementResult result = transaction.run(statement);
             int recordSize = result.list().size();
             result.consume();
             if (recordSize == 0) { // nodes has no relation
-                throw new NoSuchRecordException("users with toUUID {} or fromUUID {} not found");
+                throw new DaoLayerException("users with toUUID {} or fromUUID {} not found");
             } else {
                 query = new StringBuilder();
-                query.append("MATCH (n:").append(nodeType).append(")-[r:connect]->(n1:").append(nodeType)
-                        .append(") WHERE n.id = $fromUUID AND n1.id = $toUUID ").append("SET r.").append(propertyName)
-                        .append(" = $propertyValue ").append("RETURN n,n1");
+                query.append("MATCH (n:").append(label).append(")-[r:connect]->(n1:").append(label)
+                        .append(") WHERE n.id = $fromUUID AND n1.id = $toUUID ").append("SET r").append(" = ")
+                        .append("$props ").append("RETURN n,n1");
 
                 statement = new Statement(query.toString(), parameters);
                 result = transaction.run(statement);
@@ -109,10 +122,11 @@ public class GraphDao implements IGraphDao {
                 result.consume();
                 if (recordSize == 0) {
 
+                    //TODO: use 1 query to figure out if the nodes/relation exists and then addNode & add/update the relation accordingly
                     query = new StringBuilder();
-                    query.append("MATCH (n:").append(nodeType).append("), (n1:").append(nodeType)
+                    query.append("MATCH (n:").append(label).append("), (n1:").append(label)
                             .append(") WHERE n.id = $fromUUID AND n1.id = $toUUID ").append("CREATE (n)-[r:connect]->(n1) ")
-                            .append("SET r.").append(propertyName).append(" = $propertyValue ").append("RETURN n,n1");
+                            .append("SET r").append(" = ").append("$props ").append("RETURN n,n1");
 
                     statement = new Statement(query.toString(), parameters);
                     result = transaction.run(statement);
@@ -125,91 +139,78 @@ public class GraphDao implements IGraphDao {
             }
             transaction.close();
 
-        } catch (ClientException e) {
+        } catch (DaoLayerException e) {
             transaction.rollbackAsync().toCompletableFuture();
             logger.error("user relation with toUUID {} and fromUUID {} updated failed : {}", toUUID, fromUUID, e);
+            throw e;
         }
         session.close();
     }
 
+    private List<Node> getNodes(List<Record> records) {
+        List<Node> nodes = new ArrayList<>();
+        if (records.size() > 0) {
+            for (Record record : records) {
+                org.neo4j.driver.v1.types.Node node = record.get("n1").asNode();
+                // TODO: optimise
+                Node nodePojo = new Node(node.get("identifier").asString(), node.get("name").asString(),
+                        null);
+                nodes.add(nodePojo);
 
-    @Override
-    public List<Record> getAllNeighbours(String UUID) throws ClientException {
+            }
+        }
+        return nodes;
+    }
+
+    public List<Node> getNeighbours(String UUID, Map<String, String> relationProperties, Constants.DIRECTION direction) throws DaoLayerException {
 
         Session session = neo4jDriver.session();
         Transaction transaction = session.beginTransaction();
         List<Record> records = Collections.emptyList();
-
         try {
 
-            if (StringUtils.isBlank(UUID)) {
-                throw new ClientException("UUID cannot be empty");
+            if (CollectionUtils.isEmpty(relationProperties) || StringUtils.isBlank(UUID) || Objects.isNull(direction)) {
+                throw new DaoLayerException("UUID, property, direction cannot be empty");
             }
 
             Map<String, Object> parameters = new HashMap<>();
             parameters.put("UUID", UUID);
+            //parameters.put("propertyValue", propertyValue);
+            parameters.put("props", relationProperties);
 
             StringBuilder query = new StringBuilder();
-            query.append("MATCH (n:").append(nodeType).append(")-[r:connect]->(n1:").append(nodeType)
-                    .append(") WHERE n.id = $UUID RETURN n1");
+
+            if (direction == Constants.DIRECTION.OUT) {
+                query.append("MATCH (n:").append(label).append(")-[r:connect]->(n1:").append(label)
+                        .append(") WHERE n.id = $UUID ");
+                relationProperties.entrySet().forEach(r -> query.append(" AND r.").append(r.getKey()).append(" = ").append("'" + r.getValue() + "'"));
+                query.append(" RETURN n1");
+
+            } else {
+                query.append("MATCH (n:").append(label).append(")<-[r:connect]-(n1:").append(label)
+                        .append(") WHERE n.id = $UUID ");
+                relationProperties.entrySet().forEach(r -> query.append(" AND r.").append(r.getKey()).append(" = ").append("'" + r.getValue() + "'"));
+                query.append(" RETURN n1");
+            }
 
             Statement statement = new Statement(query.toString(), parameters);
 
             StatementResult result = transaction.run(statement);
             records = result.list();
             if (records.size() == 0) {
-                throw new NoSuchRecordException("Neighbour users for UUID {} not found");
-            }
-
-            transaction.commitAsync().toCompletableFuture();
-            logger.info("Neighbour users for UUID {} found  ", UUID);
-
-        } catch (ClientException e) {
-            transaction.rollbackAsync().toCompletableFuture();
-            logger.error("Neighbour users for UUID {} could not be found with exception : {}", UUID, e);
-        }
-        session.close();
-        return records;
-    }
-
-    @Override
-    public List<Record> getNeighboursByRelation(String UUID, String propertyName, String propertyValue) throws ClientException {
-
-        Session session = neo4jDriver.session();
-        Transaction transaction = session.beginTransaction();
-        List<Record> records = Collections.emptyList();
-
-        try {
-
-            if (StringUtils.isBlank(UUID) || StringUtils.isBlank(propertyName) || StringUtils.isBlank(propertyValue)) {
-                throw new ClientException("UUID, property cannot be empty");
-            }
-
-            Map<String, Object> parameters = new HashMap<>();
-            parameters.put("UUID", UUID);
-            parameters.put("propertyValue", propertyValue);
-
-            StringBuilder query = new StringBuilder();
-            query.append("MATCH (n:").append(nodeType).append(")-[r:connect]->(n1:").append(nodeType)
-                    .append(") WHERE n.id = $UUID AND r.").append(propertyName).append(" = $propertyValue RETURN n1");
-
-            Statement statement = new Statement(query.toString(), parameters);
-
-            StatementResult result = transaction.run(statement);
-            records = result.list();
-            if (records.size() == 0) {
-                throw new NoSuchRecordException("Neighbour users for UUID {} not found");
+                throw new DaoLayerException("Neighbour users for UUID " + UUID + " not found");
             }
 
             transaction.commitAsync().toCompletableFuture();
             logger.info("Neighbour users for UUID {} found successfully ", UUID);
 
-        } catch (ClientException e) {
+        } catch (DaoLayerException e) {
             transaction.rollbackAsync().toCompletableFuture();
             logger.error("Neighbour users for UUID {} exception : {}", UUID, e);
+            throw e;
         }
         session.close();
-        return records;
+        return getNodes(records);
 
     }
 }
