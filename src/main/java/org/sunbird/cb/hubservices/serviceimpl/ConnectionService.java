@@ -22,6 +22,7 @@ import org.sunbird.cb.hubservices.profile.handler.ProfileUtils;
 import org.sunbird.cb.hubservices.profile.handler.RegistryRequest;
 import org.sunbird.cb.hubservices.service.IConnectionService;
 import org.sunbird.cb.hubservices.service.IGraphService;
+import org.sunbird.cb.hubservices.service.INodeService;
 import org.sunbird.cb.hubservices.util.ConnectionProperties;
 import org.sunbird.cb.hubservices.util.Constants;
 
@@ -44,6 +45,9 @@ public class ConnectionService implements IConnectionService {
 
 	@Autowired
 	ProfileUtils profileUtils;
+
+	@Autowired
+	INodeService nodeService;
 
 	@Value("${update.profile.connections}")
 	private boolean updateProfileConnections;
@@ -78,6 +82,36 @@ public class ConnectionService implements IConnectionService {
 
 		} catch (Exception e) {
 			e.printStackTrace();
+			throw new ApplicationException(Constants.Message.FAILED_CONNECTION + e.getMessage());
+
+		}
+
+		return response;
+
+	}
+
+	public Response upsert(String rootOrg, ConnectionRequest request) throws Exception {
+
+		Response response = new Response();
+		try {
+
+			Node from = new Node(request.getUserId(), request.getUserName(), null);
+
+			Node to = new Node(request.getConnectionId(), request.getConnectionName(),
+					request.getConnectionDepartment());
+
+			Map<String,String> relP = new HashMap<>();
+			relP.put("status", request.getStatus());
+
+			boolean created = nodeService.connect(from, to, relP);
+			if (connectionProperties.isNotificationEnabled() && created)
+				sendNotification(rootOrg, connectionProperties.getNotificationTemplateRequest(), request.getUserId(),
+						request.getConnectionId(), request.getStatus());
+
+			response.put(Constants.ResponseStatus.MESSAGE, Constants.ResponseStatus.SUCCESSFUL);
+			response.put(Constants.ResponseStatus.STATUS, HttpStatus.CREATED);
+
+		} catch (Exception e) {
 			throw new ApplicationException(Constants.Message.FAILED_CONNECTION + e.getMessage());
 
 		}

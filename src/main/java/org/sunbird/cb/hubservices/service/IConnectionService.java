@@ -17,6 +17,8 @@ public interface IConnectionService {
 	 */
 	Response add(String rootOrg, ConnectionRequest request) throws Exception;
 
+	public Response upsert(String rootOrg, ConnectionRequest request) throws Exception;
+
 	/**
 	 * To update the status and dates of connection
 	 * 

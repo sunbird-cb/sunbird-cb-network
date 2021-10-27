@@ -22,7 +22,7 @@ public class UserConnectionCrudController {
 	@PostMapping("/add")
 	public ResponseEntity<Response> add(@RequestHeader String rootOrg, @RequestBody ConnectionRequest request)
 			throws Exception {
-		Response response = connectionService.add(rootOrg, request);
+		Response response = connectionService.upsert(rootOrg, request);
 		return new ResponseEntity<>(response, HttpStatus.CREATED);
 
 	}
@@ -30,7 +30,7 @@ public class UserConnectionCrudController {
 	@PostMapping("/update")
 	public ResponseEntity<Response> update(@RequestHeader String rootOrg, @RequestBody ConnectionRequest request)
 			throws Exception {
-		Response response = connectionService.update(rootOrg, request);
+		Response response = connectionService.upsert(rootOrg, request);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 
 	}
