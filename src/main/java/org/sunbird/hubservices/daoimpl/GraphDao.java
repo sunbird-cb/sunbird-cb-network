@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micrometer.core.instrument.util.StringUtils;
 import org.neo4j.driver.v1.*;
 import org.neo4j.driver.v1.exceptions.*;
-import org.neo4j.driver.v1.exceptions.value.ValueException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,13 +11,10 @@ import org.springframework.util.CollectionUtils;
 import org.sunbird.cb.hubservices.exception.ErrorCode;
 import org.sunbird.cb.hubservices.exception.GraphException;
 import org.sunbird.cb.hubservices.exception.ValidationException;
-import org.sunbird.cb.hubservices.exception.NoRecordFoundException;
 import org.sunbird.cb.hubservices.model.Node;
 import org.sunbird.cb.hubservices.util.Constants;
 import org.sunbird.hubservices.dao.IGraphDao;
 
-import javax.annotation.PostConstruct;
-import java.time.Duration;
 import java.util.*;
 
 public class GraphDao implements IGraphDao {
