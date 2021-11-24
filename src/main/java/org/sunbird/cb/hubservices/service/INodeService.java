@@ -14,6 +14,8 @@ public interface INodeService {
 
     public List<Node> getNodeByInRelation(String identifier, Map<String, String> relationProperties, int offset, int size);
 
+    public List<Node> getAllNodes(String identifier, Map<String, String> relationProperties, int offset, int size);
+
     public List<Node> getNodeNextLevel(String identifier, Map<String, String> relationProperties, int offset, int size);
 
     public int getNodesCount(String identifier, Map<String, String> relationProperties, Constants.DIRECTION direction);

@@ -61,6 +61,14 @@ public class NodeService implements INodeService {
     }
 
     @Override
+    public List<Node> getAllNodes(String identifier, Map<String, String> relationProperties, int offset, int size) {
+
+        checkParams(identifier, relationProperties);
+
+        return getNodesWith(identifier, relationProperties, null, offset, size);
+    }
+
+    @Override
     public int getNodesCount(String identifier, Map<String, String> relationProperties, Constants.DIRECTION direction) {
         int count = 0;
         if (StringUtils.isEmpty(identifier)) {
