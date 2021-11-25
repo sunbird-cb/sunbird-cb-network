@@ -22,6 +22,7 @@ public class UserConnectionCrudController {
 	@PostMapping("/add")
 	public ResponseEntity<Response> add(@RequestHeader String rootOrg, @RequestBody ConnectionRequest request)
 			throws Exception {
+		request.setStatus(Constants.Status.PENDING);
 		Response response = connectionService.upsert(rootOrg, request);
 		return new ResponseEntity<>(response, HttpStatus.CREATED);
 
