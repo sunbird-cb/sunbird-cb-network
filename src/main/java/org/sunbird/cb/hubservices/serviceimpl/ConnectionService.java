@@ -98,7 +98,7 @@ public class ConnectionService implements IConnectionService {
 			Node from = new Node(request.getUserId(), request.getUserName(), null);
 
 			Node to = new Node(request.getConnectionId(), request.getConnectionName(),
-					request.getConnectionDepartment());
+					null);
 
 			Map<String,String> relP = new HashMap<>();
 			relP.put("status", request.getStatus());
