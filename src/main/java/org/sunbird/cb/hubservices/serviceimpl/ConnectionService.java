@@ -288,4 +288,112 @@ public class ConnectionService implements IConnectionService {
 		return graphService.getAllNodes(userId).stream().map(node -> node.getIdentifier()).collect(Collectors.toList());
 
 	}
+
+	@Override
+	public List<String> findUserConnectionsV2(String userId, String status) throws Exception {
+
+		Map<String, String> relationProperties = new HashMap<>();
+		relationProperties.put("status", status);
+		return nodeService.getAllNodes(userId, relationProperties, 0, 20).stream().map(node -> node.getIdentifier()).collect(Collectors.toList());
+
+	}
+	@Override
+	public Response findSuggestedConnectionsV2(String userId, int offset, int limit) {
+
+		Response response = new Response();
+		try {
+			if (userId == null || userId.isEmpty()) {
+				throw new BadRequestException(Constants.Message.USER_ID_INVALID);
+			}
+			Map<String, String> relationProperties = new HashMap<>();
+			relationProperties.put("status", Constants.Status.APPROVED);
+			List<Node> nodes = nodeService.getNodeNextLevel(userId,relationProperties,offset,limit);
+
+			List<String> allNodesIds = findUserConnectionsV2(userId, Constants.Status.APPROVED);
+			List<Node> detachedNodes = nodes.stream().filter(node -> !allNodesIds.contains(node.getIdentifier()))
+					.collect(Collectors.toList());
+
+			// System.out.println("commons ->"+new
+			// ObjectMapper().writeValueAsString(commonConnections));
+			if (detachedNodes.isEmpty()) {
+				response.put(Constants.ResponseStatus.MESSAGE, Constants.ResponseStatus.FAILED);
+				response.put(Constants.ResponseStatus.DATA, detachedNodes);
+				response.put(Constants.ResponseStatus.STATUS, HttpStatus.NO_CONTENT);
+			}
+			response.put(Constants.ResponseStatus.MESSAGE, Constants.ResponseStatus.SUCCESSFUL);
+			response.put(Constants.ResponseStatus.DATA, detachedNodes);
+			response.put(Constants.ResponseStatus.STATUS, HttpStatus.OK);
+
+		} catch (Exception e) {
+			throw new ApplicationException(Constants.Message.FAILED_CONNECTION + e.getMessage());
+
+		}
+
+		return response;
+	}
+	@Override
+	public Response findAllConnectionsIdsByStatusV2(String userId, String status, int offset, int limit) {
+		Response response = new Response();
+
+		try {
+			if (userId == null || userId.isEmpty()) {
+				throw new BadRequestException(Constants.Message.USER_ID_INVALID);
+			}
+			Map<String, String> relationProperties = new HashMap<>();
+			relationProperties.put("status", status);
+			List<Node> nodes = nodeService.getAllNodes(userId, relationProperties, offset, limit);
+			int count = nodeService.getNodesCount(userId, relationProperties, null);
+
+			response.put(Constants.ResponseStatus.PAGENO, offset);
+			response.put(Constants.ResponseStatus.TOTALHIT, count);
+
+			if (nodes.isEmpty()) {
+				response.put(Constants.ResponseStatus.MESSAGE, Constants.ResponseStatus.FAILED);
+				response.put(Constants.ResponseStatus.DATA, nodes);
+				response.put(Constants.ResponseStatus.STATUS, HttpStatus.NO_CONTENT);
+			}
+			response.put(Constants.ResponseStatus.MESSAGE, Constants.ResponseStatus.SUCCESSFUL);
+			response.put(Constants.ResponseStatus.DATA, nodes);
+			response.put(Constants.ResponseStatus.STATUS, HttpStatus.OK);
+
+		} catch (Exception e) {
+			throw new ApplicationException(Constants.Message.FAILED_CONNECTION + e.getMessage());
+		}
+
+		return response;
+	}
+	@Override
+	public Response findConnectionsRequestedV2(String userId, int offset, int limit, Constants.DIRECTION direction) {
+		Response response = new Response();
+
+		try {
+			if (userId == null || userId.isEmpty()) {
+				throw new BadRequestException(Constants.Message.USER_ID_INVALID);
+			}
+			Map<String, String> relationProperties = new HashMap<>();
+			relationProperties.put("status", Constants.Status.PENDING);
+
+			List<Node> nodes = new ArrayList<>();
+			if (direction.equals(Constants.DIRECTION.IN))
+				nodes = nodeService.getNodeByInRelation(userId, relationProperties, offset, limit);
+
+			else
+				nodes = nodeService.getNodeByOutRelation(userId, relationProperties, offset, limit);
+
+			if (nodes.isEmpty()) {
+				response.put(Constants.ResponseStatus.MESSAGE, Constants.ResponseStatus.FAILED);
+				response.put(Constants.ResponseStatus.DATA, nodes);
+				response.put(Constants.ResponseStatus.STATUS, HttpStatus.NO_CONTENT);
+			}
+			response.put(Constants.ResponseStatus.MESSAGE, Constants.ResponseStatus.SUCCESSFUL);
+			response.put(Constants.ResponseStatus.DATA, nodes);
+			response.put(Constants.ResponseStatus.STATUS, HttpStatus.OK);
+
+		} catch (Exception e) {
+			throw new ApplicationException(Constants.Message.FAILED_CONNECTION + e.getMessage());
+		}
+
+		return response;
+	}
+
 }

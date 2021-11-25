@@ -60,4 +60,9 @@ public interface IConnectionService {
 
 	List<String> findUserConnections(String rootOrg, String userId) throws Exception;
 
+	public List<String> findUserConnectionsV2(String userId, String status) throws Exception;
+	public Response findSuggestedConnectionsV2(String userId, int offset, int limit);
+	public Response findAllConnectionsIdsByStatusV2(String userId, String status, int offset, int limit);
+	public Response findConnectionsRequestedV2(String userId, int offset, int limit, Constants.DIRECTION direction);
+
 }

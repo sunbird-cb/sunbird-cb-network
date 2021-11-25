@@ -33,6 +33,10 @@ public interface IProfileService {
 	 */
 	Response findProfileRequested(String rootOrg, String userId, int offset, int limit, Constants.DIRECTION direction);
 
-	Response multiSearchProfiles(String rootOrg, String userId, MultiSearch multiSearchRequest, String[] sourceFields);
+	Response multiSearchProfiles(String userId, MultiSearch multiSearchRequest, String[] sourceFields);
+
+	public Response findCommonProfileV2(String userId, int offset, int limit);
+	public Response findProfilesV2(String userId, int offset, int limit);
+	public Response findProfileRequestedV2(String userId, int offset, int limit, Constants.DIRECTION direction);
 
 }

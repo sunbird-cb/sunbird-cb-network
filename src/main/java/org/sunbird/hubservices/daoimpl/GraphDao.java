@@ -227,19 +227,13 @@ public class GraphDao implements IGraphDao {
 
                 relationProperties.entrySet().forEach(r -> query.append(" AND r.").append(r.getKey()).append(" = ").append("'" + r.getValue() + "'"));
                 query.append(" RETURN r");
-
                 Statement statement = new Statement(query.toString(), parameters);
 
                 StatementResult result = transaction.run(statement);
                 List<Record> records = result.list();
-
+                result.consume();
+                count = records.size();
                 transaction.commitAsync().toCompletableFuture();
-                if (records.size() > 0) {
-                    for (Record record : records) {
-                        count = record.get("count(r)").asInt();
-
-                    }
-                }
                 logger.info("{} nodes count.", count);
 
             } catch (ClientException e) {

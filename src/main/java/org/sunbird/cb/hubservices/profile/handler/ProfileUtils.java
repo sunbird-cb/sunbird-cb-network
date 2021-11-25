@@ -32,6 +32,15 @@ public class ProfileUtils {
     @Autowired
     private ConnectionProperties connectionProperties;
 
+    public static List<String> getUserDefaultFields() {
+        List<String> userFields = new ArrayList<>();
+        userFields.add("profileDetails.professionalDetails");
+        userFields.add("profileDetails.employmentDetails");
+        userFields.add("profileDetails.personalDetails");
+        userFields.add("userId");
+        return userFields;
+    }
+
     public static enum API {
         CREATE("open-saber.registry.create"), READ("open-saber.registry.read"),
         SEARCH("open-saber.registry.search"), UPDATE("open-saber.registry.update");
@@ -82,6 +91,8 @@ public class ProfileUtils {
         public static final String FILTERs = "filters";
         public static final String REQUEST = "request";
         public static final String ENTITY_TYPE = "entityType";
+        public static final String PROFILE_DETAILS = "profileDetails";
+
 
     }
 
