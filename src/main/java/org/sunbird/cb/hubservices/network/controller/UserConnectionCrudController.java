@@ -33,6 +33,10 @@ public class UserConnectionCrudController {
 	@PostMapping("/update")
 	public ResponseEntity<Response> update(@RequestHeader String rootOrg, @RequestBody ConnectionRequest request)
 			throws Exception {
+		String connectionId = request.getConnectionId();
+		String userId = request.getUserId();
+		request.setUserId(connectionId);
+		request.setConnectionId(userId);
 		Response response = connectionService.upsert(rootOrg, request);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 
