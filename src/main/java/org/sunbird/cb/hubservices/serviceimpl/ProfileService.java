@@ -1,23 +1,11 @@
 package org.sunbird.cb.hubservices.serviceimpl;
 
 import java.util.*;
-import java.util.stream.Stream;
-
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.elasticsearch.action.search.MultiSearchRequest;
-import org.elasticsearch.action.search.MultiSearchResponse;
-import org.elasticsearch.action.search.SearchRequest;
-import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.search.SearchHit;
-import org.elasticsearch.search.builder.SearchSourceBuilder;
-import org.elasticsearch.search.sort.SortOrder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,34 +42,6 @@ public class ProfileService implements IProfileService {
     @Autowired
     ObjectMapper mapper;
 
-
-    @Deprecated
-    @Override
-    public Response findCommonProfile(String rootOrg, String userId, int offset, int limit) {
-
-        Response responseConnections = connectionService.findSuggestedConnections(rootOrg, userId, offset, limit);
-       return responseConnections;
-
-
-    }
-
-    @Deprecated
-    @Override
-    public Response findProfiles(String rootOrg, String userId, int offset, int limit) {
-
-        Response responseConnections = connectionService.findAllConnectionsIdsByStatus(rootOrg, userId, Constants.Status.APPROVED, offset, limit);
-        return responseConnections;
-
-    }
-
-
-    @Deprecated
-    @Override
-    public Response findProfileRequested(String rootOrg, String userId, int offset, int limit, Constants.DIRECTION direction) {
-        Response responseConnections = connectionService.findConnectionsRequested(rootOrg, userId, offset, limit, direction);
-        return  responseConnections;
-
-    }
 
     @Override
     public Response findCommonProfileV2(String userId, int offset, int limit){

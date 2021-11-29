@@ -65,7 +65,7 @@ public class NodeService implements INodeService {
 
         checkParams(identifier, relationProperties);
 
-        return getNodesWith(identifier, relationProperties, null, offset, size, Arrays.asList("idn"));
+        return getNodesWith(identifier, relationProperties, null, offset, size, Arrays.asList(Constants.Graph.ID.getValue()));
     }
 
     @Override

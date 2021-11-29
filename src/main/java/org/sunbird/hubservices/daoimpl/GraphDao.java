@@ -45,10 +45,9 @@ public class GraphDao implements IGraphDao {
 
                 Map<String, Object> props = new HashMap<>();
                 props = new ObjectMapper().convertValue(node, Map.class);
-                //props.put("id", node.getIdentifier());
 
                 Map<String, Object> params = new HashMap<>();
-                params.put("props", props);
+                params.put(Constants.Graph.PROPS.getValue(), props);
 
                 StringBuilder queryBuilder = new StringBuilder();
                 queryBuilder.append("CREATE (n:").append(label).append(") SET n = $props RETURN n");
@@ -91,7 +90,7 @@ public class GraphDao implements IGraphDao {
                 parameters.put("fromUUID", fromUUID);
                 parameters.put("toUUID", toUUID);
                 //parameters.put("propertyValue", propertyValue);
-                parameters.put("props", relationProperties);
+                parameters.put(Constants.Graph.PROPS.getValue(), relationProperties);
 
                 StringBuilder query = new StringBuilder();
                 query.append("MATCH (n:").append(label).append("), (n1:").append(label)
@@ -155,8 +154,8 @@ public class GraphDao implements IGraphDao {
                 }
 
                 Map<String, Object> parameters = new HashMap<>();
-                parameters.put("UUID", UUID);
-                parameters.put("props", relationProperties);
+                parameters.put(Constants.Graph.UUID.getValue(), UUID);
+                parameters.put(Constants.Graph.PROPS.getValue(), relationProperties);
 
                 StringBuilder query = new StringBuilder();
 
@@ -220,8 +219,8 @@ public class GraphDao implements IGraphDao {
                 }
 
                 Map<String, Object> parameters = new HashMap<>();
-                parameters.put("UUID", UUID);
-                parameters.put("props", relationProperties);
+                parameters.put(Constants.Graph.UUID.getValue(), UUID);
+                parameters.put(Constants.Graph.PROPS.getValue(), relationProperties);
 
                 StringBuilder query = new StringBuilder();
 
@@ -237,13 +236,14 @@ public class GraphDao implements IGraphDao {
                 }
 
                 relationProperties.entrySet().forEach(r -> query.append(" AND r.").append(r.getKey()).append(" = ").append("'" + r.getValue() + "'"));
-                query.append(" RETURN r");
+                query.append(" RETURN count(*)");
+                System.out.println("count query=="+query);
                 Statement statement = new Statement(query.toString(), parameters);
 
                 StatementResult result = transaction.run(statement);
                 List<Record> records = result.list();
                 result.consume();
-                count = records.size();
+                count = records.get(0).get("count(*)").asInt();
                 transaction.commitAsync().toCompletableFuture();
                 logger.info("{} nodes count.", count);
 
@@ -275,10 +275,10 @@ public class GraphDao implements IGraphDao {
                     org.neo4j.driver.v1.types.Type t= record.get(k).type();
                     if(t.equals(TYPE_SYSTEM.NODE())){
                         org.neo4j.driver.v1.types.Node node = record.get(k).asNode();
-                        if(node.get("id")==null)
+                        if(node.get(Constants.Graph.ID.getValue())==null)
                             throw new GraphException(ErrorCode.MISSING_PROPERTY_ERROR.name(), "Missing {id} mandatory field");
-                        id = node.get("id").asString();
-                    } else if(t.equals(TYPE_SYSTEM.STRING()) && k.contains("id")){
+                        id = node.get(Constants.Graph.ID.getValue()).asString();
+                    } else if(t.equals(TYPE_SYSTEM.STRING()) && k.contains(Constants.Graph.ID.getValue())){
                         id = record.get(k).asString();
 
                     } else {

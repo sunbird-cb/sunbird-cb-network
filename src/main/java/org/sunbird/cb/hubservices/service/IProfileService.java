@@ -7,33 +7,7 @@ import org.sunbird.cb.hubservices.util.Constants;
 
 public interface IProfileService {
 
-	/**
-	 * Find related profile from existing connections
-	 * 
-	 * @param userId
-	 * @param offset
-	 * @param limit
-	 * @return
-	 */
-	Response findCommonProfile(String rootOrg, String userId, int offset, int limit);
-
-	/**
-	 * Find profile for which connections are established Accepted connection
-	 * 
-	 * @param userId
-	 * @return
-	 */
-	Response findProfiles(String rootOrg, String userId, int offset, int limit);
-
-	/**
-	 * Find profiles for which is not established/pending for approval
-	 * 
-	 * @param userId
-	 * @return
-	 */
-	Response findProfileRequested(String rootOrg, String userId, int offset, int limit, Constants.DIRECTION direction);
-
-	Response multiSearchProfiles(String userId, MultiSearch multiSearchRequest, String[] sourceFields);
+	public Response multiSearchProfiles(String userId, MultiSearch multiSearchRequest, String[] sourceFields);
 
 	public Response findCommonProfileV2(String userId, int offset, int limit);
 	public Response findProfilesV2(String userId, int offset, int limit);

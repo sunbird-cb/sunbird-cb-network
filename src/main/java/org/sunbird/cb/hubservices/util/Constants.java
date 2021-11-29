@@ -3,8 +3,7 @@ package org.sunbird.cb.hubservices.util;
 public class Constants {
 
 	public static enum Graph {
-		NODE("n"), NODEID("nodeId"), IDENTIFIER("identifier"), LEVEL("level"), TYPE("type"), NAME("name"),
-		RELATION_LABEL("IS_PARENT_OF");
+		ID("id"), STATUS("status"), UUID("UUID"), PROPS("props");
 
 		private String value;
 
@@ -18,10 +17,6 @@ public class Constants {
 	}
 
 	private static final String UTIL_CLASS = "Utility class";
-
-	public enum STATUS {
-		APPROVED, REJECTED, PENDING
-	}
 
 	public enum DIRECTION {
 		IN, OUT
