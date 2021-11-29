@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.sunbird.cb.hubservices.exception.GraphException;
 import org.sunbird.cb.hubservices.exception.ValidationException;
-import org.sunbird.cb.hubservices.model.Node;
+import org.sunbird.cb.hubservices.model.NodeV2;
 import org.sunbird.cb.hubservices.service.INodeService;
 import org.sunbird.cb.hubservices.util.Constants;
 import org.sunbird.hubservices.dao.IGraphDao;
@@ -24,7 +24,7 @@ public class NodeService implements INodeService {
     private IGraphDao graphDao;
 
     @Override
-    public Boolean connect(Node from, Node to, Map<String, String> relationProperties) {
+    public Boolean connect(NodeV2 from, NodeV2 to, Map<String, String> relationProperties) {
 
         Boolean flag = Boolean.FALSE;
         if (Objects.isNull(from) || Objects.isNull(to) || CollectionUtils.isEmpty(relationProperties)) {
@@ -45,7 +45,7 @@ public class NodeService implements INodeService {
     }
 
     @Override
-    public List<Node> getNodeByOutRelation(String identifier, Map<String, String> relationProperties, int offset, int size) {
+    public List<NodeV2> getNodeByOutRelation(String identifier, Map<String, String> relationProperties, int offset, int size) {
 
         checkParams(identifier, relationProperties);
 
@@ -53,7 +53,7 @@ public class NodeService implements INodeService {
     }
 
     @Override
-    public List<Node> getNodeByInRelation(String identifier, Map<String, String> relationProperties, int offset, int size) {
+    public List<NodeV2> getNodeByInRelation(String identifier, Map<String, String> relationProperties, int offset, int size) {
 
         checkParams(identifier, relationProperties);
 
@@ -61,7 +61,7 @@ public class NodeService implements INodeService {
     }
 
     @Override
-    public List<Node> getAllNodes(String identifier, Map<String, String> relationProperties, int offset, int size) {
+    public List<NodeV2> getAllNodes(String identifier, Map<String, String> relationProperties, int offset, int size) {
 
         checkParams(identifier, relationProperties);
 
@@ -85,19 +85,19 @@ public class NodeService implements INodeService {
 
 
     @Override
-    public List<Node> getNodeNextLevel(String identifier, Map<String, String> relationProperties, int offset, int size) {
+    public List<NodeV2> getNodeNextLevel(String identifier, Map<String, String> relationProperties, int offset, int size) {
 
         checkParams(identifier, relationProperties);
 
-        List<Node> nodes = new ArrayList<>();
-        for (Node n : getNodesWith(identifier, relationProperties, Constants.DIRECTION.OUT, offset, size)) {
+        List<NodeV2> nodes = new ArrayList<>();
+        for (NodeV2 n : getNodesWith(identifier, relationProperties, Constants.DIRECTION.OUT, offset, size)) {
             nodes.addAll(getNodesWith(n.getIdentifier(), relationProperties, Constants.DIRECTION.OUT, offset, size));
         }
         return nodes;
     }
 
-    private List<Node> getNodesWith(String identifier, Map<String, String> relationProperties, Constants.DIRECTION direction, int offset, int size) {
-        List<Node> nodes = Collections.emptyList();
+    private List<NodeV2> getNodesWith(String identifier, Map<String, String> relationProperties, Constants.DIRECTION direction, int offset, int size) {
+        List<NodeV2> nodes = Collections.emptyList();
         try {
             nodes = graphDao.getNeighbours(identifier, relationProperties, direction, offset, size);
         } catch (GraphException d) {

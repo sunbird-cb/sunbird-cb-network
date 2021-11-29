@@ -72,11 +72,6 @@ public class ConnectionService implements IConnectionService {
 				sendNotification(rootOrg, connectionProperties.getNotificationTemplateRequest(), request.getUserId(),
 						request.getConnectionId(), Constants.Status.PENDING);
 
-			if (created && updateProfileConnections) {
-				logger.info("On add, updating connections into profile for {}", request.getUserId());
-				updateProfileConnections(request.getUserId(), Constants.Status.PENDING, null, "initiatedConnections");
-			}
-
 			response.put(Constants.ResponseStatus.MESSAGE, Constants.ResponseStatus.SUCCESSFUL);
 			response.put(Constants.ResponseStatus.STATUS, HttpStatus.CREATED);
 
@@ -90,23 +85,25 @@ public class ConnectionService implements IConnectionService {
 
 	}
 
-	public Response upsert(String rootOrg, ConnectionRequest request) throws Exception {
+	public Response upsert(String rootOrg, ConnectionRequestV2 request) throws Exception {
 
 		Response response = new Response();
 		try {
 
-			Node from = new Node(request.getUserId(), request.getUserName(), null);
+			NodeV2 from = new NodeV2(request.getUserIdFrom());
 
-			Node to = new Node(request.getConnectionId(), request.getConnectionName(),
-					request.getConnectionDepartment());
+			NodeV2 to = new NodeV2(request.getUserIdTo());
 
 			Map<String,String> relP = new HashMap<>();
 			relP.put("status", request.getStatus());
 
 			boolean created = nodeService.connect(from, to, relP);
+			if(!created)
+				throw new ApplicationException(Constants.Message.FAILED_CONNECTION);
+
 			if (connectionProperties.isNotificationEnabled() && created)
-				sendNotification(rootOrg, connectionProperties.getNotificationTemplateRequest(), request.getUserId(),
-						request.getConnectionId(), request.getStatus());
+				sendNotification(rootOrg, connectionProperties.getNotificationTemplateRequest(), request.getUserIdFrom(),
+						request.getUserIdTo(), request.getStatus());
 
 			response.put(Constants.ResponseStatus.MESSAGE, Constants.ResponseStatus.SUCCESSFUL);
 			response.put(Constants.ResponseStatus.STATUS, HttpStatus.CREATED);
@@ -117,27 +114,6 @@ public class ConnectionService implements IConnectionService {
 		}
 
 		return response;
-
-	}
-
-	// @Async("connectionExecutor")
-	public void updateProfileConnections(String userId, String status, Constants.DIRECTION direction, String key) {
-		try {
-			int count = graphService.getAllNodeCount(userId, status, direction);
-			List<Node> nodes = graphService.getNodesInEdge(userId, status, 0, count);
-			Map<String, Object> profileRequest = new HashMap<>();
-			profileRequest.put(key, nodes);
-
-			RegistryRequest registryRequest = profileRequestHandler.updateRequest(userId, profileRequest);
-			ResponseEntity<?> responseEntity = profileUtils.getResponseEntity(ProfileUtils.URL.UPDATE.getValue(),
-					registryRequest);
-			logger.info("Updating profile for {}: {}", userId, responseEntity.getBody());
-
-		} catch (Exception e) {
-			e.printStackTrace();
-			logger.error("Updating profile for {}: {}", userId, e);
-
-		}
 
 	}
 
@@ -160,12 +136,6 @@ public class ConnectionService implements IConnectionService {
 				sendNotification(rootOrg, connectionProperties.getNotificationTemplateResponse(),
 						request.getConnectionId(), request.getUserId(), request.getStatus());
 
-			if (updated && updateProfileConnections) {
-				logger.info("On update, updating connections into profile for {}", request.getUserId());
-				updateProfileConnections(request.getUserId(), request.getStatus(), Constants.DIRECTION.IN,
-						request.getStatus() + "Connections");
-
-			}
 			response.put(Constants.ResponseStatus.MESSAGE, Constants.ResponseStatus.SUCCESSFUL);
 			response.put(Constants.ResponseStatus.STATUS, HttpStatus.OK);
 
@@ -307,10 +277,10 @@ public class ConnectionService implements IConnectionService {
 			}
 			Map<String, String> relationProperties = new HashMap<>();
 			relationProperties.put("status", Constants.Status.APPROVED);
-			List<Node> nodes = nodeService.getNodeNextLevel(userId,relationProperties,offset,limit);
+			List<NodeV2> nodes = nodeService.getNodeNextLevel(userId,relationProperties,offset,limit);
 
 			List<String> allNodesIds = findUserConnectionsV2(userId, Constants.Status.APPROVED);
-			List<Node> detachedNodes = nodes.stream().filter(node -> !allNodesIds.contains(node.getIdentifier()))
+			List<NodeV2> detachedNodes = nodes.stream().filter(node -> !allNodesIds.contains(node.getIdentifier()))
 					.collect(Collectors.toList());
 
 			// System.out.println("commons ->"+new
@@ -341,7 +311,7 @@ public class ConnectionService implements IConnectionService {
 			}
 			Map<String, String> relationProperties = new HashMap<>();
 			relationProperties.put("status", status);
-			List<Node> nodes = nodeService.getAllNodes(userId, relationProperties, offset, limit);
+			List<NodeV2> nodes = nodeService.getAllNodes(userId, relationProperties, offset, limit);
 			int count = nodeService.getNodesCount(userId, relationProperties, null);
 
 			response.put(Constants.ResponseStatus.PAGENO, offset);
@@ -373,7 +343,7 @@ public class ConnectionService implements IConnectionService {
 			Map<String, String> relationProperties = new HashMap<>();
 			relationProperties.put("status", Constants.Status.PENDING);
 
-			List<Node> nodes = new ArrayList<>();
+			List<NodeV2> nodes = new ArrayList<>();
 			if (direction.equals(Constants.DIRECTION.IN))
 				nodes = nodeService.getNodeByInRelation(userId, relationProperties, offset, limit);
 

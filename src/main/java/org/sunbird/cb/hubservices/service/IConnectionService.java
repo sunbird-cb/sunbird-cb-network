@@ -3,6 +3,7 @@ package org.sunbird.cb.hubservices.service;
 import java.util.List;
 
 import org.sunbird.cb.hubservices.model.ConnectionRequest;
+import org.sunbird.cb.hubservices.model.ConnectionRequestV2;
 import org.sunbird.cb.hubservices.model.Response;
 import org.sunbird.cb.hubservices.util.Constants;
 
@@ -17,7 +18,7 @@ public interface IConnectionService {
 	 */
 	Response add(String rootOrg, ConnectionRequest request) throws Exception;
 
-	public Response upsert(String rootOrg, ConnectionRequest request) throws Exception;
+	public Response upsert(String rootOrg, ConnectionRequestV2 request) throws Exception;
 
 	/**
 	 * To update the status and dates of connection

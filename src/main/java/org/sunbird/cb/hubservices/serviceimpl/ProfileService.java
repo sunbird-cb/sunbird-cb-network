@@ -111,7 +111,7 @@ public class ProfileService implements IProfileService {
             List<String> tags = new ArrayList<>();
             Map<String, Object> tagRes = new HashMap<>();
 
-            List<String> includeFields = Arrays.asList(sourceFields).size()>0 ? Arrays.asList(sourceFields) : ProfileUtils.getUserDefaultFields();
+            List<String> includeFields = sourceFields != null && Arrays.asList(sourceFields).size()>0 ? Arrays.asList(sourceFields) : ProfileUtils.getUserDefaultFields();
 
             for(Search sRequest: mSearchRequest.getSearch()) {
 

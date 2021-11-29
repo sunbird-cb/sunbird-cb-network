@@ -11,7 +11,7 @@ import org.springframework.util.CollectionUtils;
 import org.sunbird.cb.hubservices.exception.ErrorCode;
 import org.sunbird.cb.hubservices.exception.GraphException;
 import org.sunbird.cb.hubservices.exception.ValidationException;
-import org.sunbird.cb.hubservices.model.Node;
+import org.sunbird.cb.hubservices.model.NodeV2;
 import org.sunbird.cb.hubservices.util.Constants;
 import org.sunbird.hubservices.dao.IGraphDao;
 
@@ -32,7 +32,7 @@ public class GraphDao implements IGraphDao {
     }
 
     @Override
-    public void upsertNode(Node node) {
+    public void upsertNode(NodeV2 node) {
         Session session = neo4jDriver.session();
         try {
             Transaction transaction = session.beginTransaction();
@@ -143,7 +143,7 @@ public class GraphDao implements IGraphDao {
     }
 
     @Override
-    public List<Node> getNeighbours(String UUID, Map<String, String> relationProperties, Constants.DIRECTION direction, int offset, int limit) {
+    public List<NodeV2> getNeighbours(String UUID, Map<String, String> relationProperties, Constants.DIRECTION direction, int offset, int limit) {
         Session session = neo4jDriver.session();
         try {
             Transaction transaction = session.beginTransaction();
@@ -252,14 +252,13 @@ public class GraphDao implements IGraphDao {
 
     }
 
-    private List<Node> getNodes(List<Record> records) {
-        List<Node> nodes = new ArrayList<>();
+    private List<NodeV2> getNodes(List<Record> records) {
+        List<NodeV2> nodes = new ArrayList<>();
         if (records.size() > 0) {
             for (Record record : records) {
                 org.neo4j.driver.v1.types.Node node = record.get("n1").asNode();
                 // TODO: optimise
-                Node nodePojo = new Node(node.get("identifier").asString(), node.get("name").asString(),
-                        null);
+                NodeV2 nodePojo = new NodeV2(node.get("identifier").asString());
                 nodes.add(nodePojo);
 
             }
