@@ -1,23 +1,20 @@
 package org.sunbird.cb.hubservices.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
-import java.util.Date;
 
 public class NodeV2 {
 
-    private String identifier;
+    private String id;
 
-    public NodeV2(String identifier){
-        this.identifier = identifier;
+    public NodeV2(String id){
+        this.id = id;
     }
 
-    public String getIdentifier() {
-        return identifier;
+    public String getId() {
+        return id;
     }
 
-    public void setIdentifier(String identifier) {
-        this.identifier = identifier;
+    public void setId(String id) {
+        this.id = id;
     }
 
 }

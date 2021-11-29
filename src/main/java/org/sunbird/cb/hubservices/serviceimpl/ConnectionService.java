@@ -264,7 +264,7 @@ public class ConnectionService implements IConnectionService {
 
 		Map<String, String> relationProperties = new HashMap<>();
 		relationProperties.put("status", status);
-		return nodeService.getAllNodes(userId, relationProperties, 0, 20).stream().map(node -> node.getIdentifier()).collect(Collectors.toList());
+		return nodeService.getAllNodes(userId, relationProperties, 0, connectionProperties.getMaxNodeSize()).stream().map(node -> node.getId()).collect(Collectors.toList());
 
 	}
 	@Override
@@ -280,7 +280,7 @@ public class ConnectionService implements IConnectionService {
 			List<NodeV2> nodes = nodeService.getNodeNextLevel(userId,relationProperties,offset,limit);
 
 			List<String> allNodesIds = findUserConnectionsV2(userId, Constants.Status.APPROVED);
-			List<NodeV2> detachedNodes = nodes.stream().filter(node -> !allNodesIds.contains(node.getIdentifier()))
+			List<NodeV2> detachedNodes = nodes.stream().filter(node -> !allNodesIds.contains(node.getId()))
 					.collect(Collectors.toList());
 
 			// System.out.println("commons ->"+new

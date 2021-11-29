@@ -17,6 +17,8 @@ import org.sunbird.hubservices.dao.IGraphDao;
 
 import java.util.*;
 
+import static org.neo4j.driver.internal.types.InternalTypeSystem.TYPE_SYSTEM;
+
 public class GraphDao implements IGraphDao {
 
     private Logger logger = LoggerFactory.getLogger(GraphDao.class);
@@ -37,13 +39,13 @@ public class GraphDao implements IGraphDao {
         try {
             Transaction transaction = session.beginTransaction();
             try {
-                if (Objects.isNull(node) || StringUtils.isBlank(node.getIdentifier())) {
+                if (Objects.isNull(node) || StringUtils.isBlank(node.getId())) {
                     throw new ValidationException("Node identifier cannot be empty");
                 }
 
                 Map<String, Object> props = new HashMap<>();
                 props = new ObjectMapper().convertValue(node, Map.class);
-                props.put("id", node.getIdentifier());
+                //props.put("id", node.getIdentifier());
 
                 Map<String, Object> params = new HashMap<>();
                 params.put("props", props);
@@ -56,7 +58,7 @@ public class GraphDao implements IGraphDao {
                 StatementResult result = transaction.run(statement);
                 result.consume();
                 transaction.commitAsync().toCompletableFuture();
-                logger.info("user node with id {} created successfully ", node.getIdentifier());
+                logger.info("user node with id {} created successfully ", node.getId());
 
             } catch (ClientException e) {
                 transaction.rollbackAsync().toCompletableFuture();
@@ -143,7 +145,7 @@ public class GraphDao implements IGraphDao {
     }
 
     @Override
-    public List<NodeV2> getNeighbours(String UUID, Map<String, String> relationProperties, Constants.DIRECTION direction, int offset, int limit) {
+    public List<NodeV2> getNeighbours(String UUID, Map<String, String> relationProperties, Constants.DIRECTION direction, int offset, int limit, List<String> attributes) {
         Session session = neo4jDriver.session();
         try {
             Transaction transaction = session.beginTransaction();
@@ -170,7 +172,15 @@ public class GraphDao implements IGraphDao {
                 }
 
                 relationProperties.entrySet().forEach(r -> query.append(" AND r.").append(r.getKey()).append(" = ").append("'" + r.getValue() + "'"));
-                query.append(" RETURN n1").append(" Skip ").append(offset).append(" limit ").append(limit);
+                query.append(" RETURN ");
+                StringBuilder sb = new StringBuilder();
+                if(!CollectionUtils.isEmpty(attributes)){
+                    attributes.stream().forEach( attribute -> sb.append("n1.").append(attribute).append(","));
+
+                } else {
+                    sb.append("n1");
+                }
+                query.append(sb).append(" Skip ").append(offset).append(" limit ").append(limit);
 
                 Statement statement = new Statement(query.toString(), parameters);
 
@@ -178,8 +188,9 @@ public class GraphDao implements IGraphDao {
                 List<Record> records = result.list();
 
                 transaction.commitAsync().toCompletableFuture();
+                List<NodeV2> nodes = getNodes(records);
                 logger.info("Neighbour users for UUID {} found successfully ", UUID);
-                return getNodes(records);
+                return nodes;
 
             } catch (ClientException e) {
                 transaction.rollbackAsync().toCompletableFuture();
@@ -256,9 +267,26 @@ public class GraphDao implements IGraphDao {
         List<NodeV2> nodes = new ArrayList<>();
         if (records.size() > 0) {
             for (Record record : records) {
-                org.neo4j.driver.v1.types.Node node = record.get("n1").asNode();
+
                 // TODO: optimise
-                NodeV2 nodePojo = new NodeV2(node.get("identifier").asString());
+
+                String id = null;
+                for(String k:record.keys()){
+                    org.neo4j.driver.v1.types.Type t= record.get(k).type();
+                    if(t.equals(TYPE_SYSTEM.NODE())){
+                        org.neo4j.driver.v1.types.Node node = record.get(k).asNode();
+                        if(node.get("id")==null)
+                            throw new GraphException(ErrorCode.MISSING_PROPERTY_ERROR.name(), "Missing {id} mandatory field");
+                        id = node.get("id").asString();
+                    } else if(t.equals(TYPE_SYSTEM.STRING()) && k.contains("id")){
+                        id = record.get(k).asString();
+
+                    } else {
+                         throw new GraphException(ErrorCode.MISSING_PROPERTY_ERROR.name(), "Missing {id} mandatory field");
+                    }
+
+                }
+                NodeV2 nodePojo = new NodeV2(id);
                 nodes.add(nodePojo);
 
             }

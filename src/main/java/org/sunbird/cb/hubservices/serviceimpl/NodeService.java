@@ -33,7 +33,7 @@ public class NodeService implements INodeService {
         try {
             graphDao.upsertNode(from);
             graphDao.upsertNode(to);
-            graphDao.upsertRelation(from.getIdentifier(), to.getIdentifier(), relationProperties);
+            graphDao.upsertRelation(from.getId(), to.getId(), relationProperties);
             flag = Boolean.TRUE;
             logger.info("user connection successful");
 
@@ -49,7 +49,7 @@ public class NodeService implements INodeService {
 
         checkParams(identifier, relationProperties);
 
-        return getNodesWith(identifier, relationProperties, Constants.DIRECTION.OUT, offset, size);
+        return getNodesWith(identifier, relationProperties, Constants.DIRECTION.OUT, offset, size, null);
     }
 
     @Override
@@ -57,7 +57,7 @@ public class NodeService implements INodeService {
 
         checkParams(identifier, relationProperties);
 
-        return getNodesWith(identifier, relationProperties, Constants.DIRECTION.IN, offset, size);
+        return getNodesWith(identifier, relationProperties, Constants.DIRECTION.IN, offset, size, null);
     }
 
     @Override
@@ -65,7 +65,7 @@ public class NodeService implements INodeService {
 
         checkParams(identifier, relationProperties);
 
-        return getNodesWith(identifier, relationProperties, null, offset, size);
+        return getNodesWith(identifier, relationProperties, null, offset, size, Arrays.asList("idn"));
     }
 
     @Override
@@ -90,16 +90,16 @@ public class NodeService implements INodeService {
         checkParams(identifier, relationProperties);
 
         List<NodeV2> nodes = new ArrayList<>();
-        for (NodeV2 n : getNodesWith(identifier, relationProperties, Constants.DIRECTION.OUT, offset, size)) {
-            nodes.addAll(getNodesWith(n.getIdentifier(), relationProperties, Constants.DIRECTION.OUT, offset, size));
+        for (NodeV2 n : getNodesWith(identifier, relationProperties, Constants.DIRECTION.OUT, offset, size,null)) {
+            nodes.addAll(getNodesWith(n.getId(), relationProperties, Constants.DIRECTION.OUT, offset, size, null));
         }
         return nodes;
     }
 
-    private List<NodeV2> getNodesWith(String identifier, Map<String, String> relationProperties, Constants.DIRECTION direction, int offset, int size) {
+    private List<NodeV2> getNodesWith(String identifier, Map<String, String> relationProperties, Constants.DIRECTION direction, int offset, int size, List<String> attr) {
         List<NodeV2> nodes = Collections.emptyList();
         try {
-            nodes = graphDao.getNeighbours(identifier, relationProperties, direction, offset, size);
+            nodes = graphDao.getNeighbours(identifier, relationProperties, direction, offset, size, attr);
         } catch (GraphException d) {
             logger.error(" Fetching user nodes for relations failed : {}", d);
         }
