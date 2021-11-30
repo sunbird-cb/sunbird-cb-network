@@ -34,8 +34,8 @@ public class UserConnectionCrudController {
 			throws Exception {
 		String connectionId = request.getUserIdTo();
 		String userId = request.getUserIdFrom();
-		request.setUserNameFrom(connectionId);
-		request.setUserDepartmentTo(userId);
+		request.setUserIdFrom(connectionId);
+		request.setUserIdTo(userId);
 		Response response = connectionService.upsert(rootOrg, request);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 
