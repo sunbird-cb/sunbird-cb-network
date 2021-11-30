@@ -175,7 +175,7 @@ public class GraphDao implements IGraphDao {
                 StringBuilder sb = new StringBuilder();
                 if(!CollectionUtils.isEmpty(attributes)){
                     attributes.stream().forEach( attribute -> sb.append("n1.").append(attribute).append(","));
-
+                    sb.deleteCharAt(sb.length()-1);
                 } else {
                     sb.append("n1");
                 }
