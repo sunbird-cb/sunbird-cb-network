@@ -3,7 +3,7 @@ package org.sunbird.cb.hubservices.util;
 public class Constants {
 
 	public static enum Graph {
-		ID("id"), STATUS("status"), UUID("UUID"), PROPS("props");
+		ID("id"), STATUS("status"), UUID("UUID"), PROPS("props"), CREATED_AT("createdAt"), UPDATED_AT("updatedAt");
 
 		private String value;
 

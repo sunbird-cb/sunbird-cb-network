@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -15,10 +16,13 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestTemplate;
 import org.sunbird.cb.hubservices.model.NotificationEvent;
 import org.sunbird.cb.hubservices.model.Response;
+import org.sunbird.cb.hubservices.profile.handler.ProfileUtils;
 import org.sunbird.cb.hubservices.util.ConnectionProperties;
 import org.sunbird.cb.hubservices.util.Constants;
 
@@ -29,6 +33,9 @@ class NotificationServiceTest {
     NotificationService notificationService;
     @Mock
     ProfileService profileService;
+
+    @Mock
+    ProfileUtils profileUtils;
 
     @Mock
     ConnectionProperties connectionProperties;
@@ -48,18 +55,19 @@ class NotificationServiceTest {
         final String status = "#status";
         final String id = "mockId";
 
-
         Map<String, Object> mockProfiles = new HashMap<>();
         Response response = new Response();
         response.put(Constants.ResponseStatus.DATA, mockProfiles);
 
-        //when(profileService.findProfiles(Arrays.asList(id),null)).thenReturn(response);
+        when(profileUtils.getUserProfiles(Arrays.asList(id))).thenReturn(Arrays.asList(mockProfiles));
+
 
         when(connectionProperties.getNotificationTemplateSender()).thenReturn(sender);
         when(connectionProperties.getNotificationTemplateTargetUrl()).thenReturn(targetUrl);
         when(connectionProperties.getNotificationTemplateTargetUrlValue()).thenReturn(urlValues);
         when(connectionProperties.getNotificationTemplateStatus()).thenReturn(status);
         when(connectionProperties.getNotificationTemplateReciepient()).thenReturn("#reciepient");
+
 
   /*      UserConnection userConnection = mock(UserConnection.class, Mockito.RETURNS_DEEP_STUBS);
         when(userConnection.getUserConnectionPrimarykey().getUserId()).thenReturn("uuid");
@@ -68,12 +76,10 @@ class NotificationServiceTest {
 
         NotificationEvent notificationEvent = notificationService.buildEvent(id, "sender", "reciepient", "status");
 
-        assertTrue(notificationEvent.getEventId().equalsIgnoreCase(id));
-        assertTrue(!notificationEvent.getRecipients().isEmpty());
-        assertTrue(!notificationEvent.getTagValues().isEmpty());
-        assertTrue(notificationEvent.getTagValues().get(sender)!=null);
-        assertTrue(notificationEvent.getTagValues().get(status)!=null);
-        assertTrue(notificationEvent.getTagValues().get(targetUrl)!=null);
+        assertTrue(notificationEvent.getConfig().getSubject().equalsIgnoreCase(id));
+        assertTrue(notificationEvent.getIds()!=null);
+        assertTrue(notificationEvent.getConfig()!=null);
+        assertTrue(notificationEvent.getTemplate()!=null);
 
     }
 
@@ -81,10 +87,11 @@ class NotificationServiceTest {
     void postEvent()  {
         when(connectionProperties.getNotificationIp()).thenReturn("ipaddress");
         when(connectionProperties.getNotificationEventEndpoint()).thenReturn("endpoint");
+        //when(new RestTemplate().exchange("ipaddressendpoint", HttpMethod.POST, Mockito.any(), String.class)).thenReturn(Mockito.any());
 
         NotificationEvent notificationEvent = mock(NotificationEvent.class, Mockito.RETURNS_DEEP_STUBS);
 
-        ResponseEntity entity  = notificationService.postEvent("rootOrg", notificationEvent);
+        ResponseEntity entity  = notificationService.postEvent(notificationEvent);
         assertTrue(entity!=null);
         assertTrue(entity.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR));
 

@@ -17,7 +17,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import org.sunbird.cb.hubservices.exception.ApplicationException;
 import org.sunbird.cb.hubservices.model.*;
 import org.sunbird.cb.hubservices.profile.handler.ProfileUtils;
 import org.sunbird.cb.hubservices.service.INotificationService;
@@ -26,7 +25,6 @@ import org.sunbird.cb.hubservices.util.Constants;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 
 @Service
 public class NotificationService implements INotificationService {
@@ -49,7 +47,7 @@ public class NotificationService implements INotificationService {
 	@Override
 	public NotificationEvent buildEvent(String eventId, String sender, String reciepient, String status) {
 
-		NotificationEvent notificationEvent = new NotificationEvent();
+        NotificationEvent notificationEvent = new NotificationEvent();
 
 		if (eventId != null && sender != null && reciepient != null) {
 
@@ -68,9 +66,32 @@ public class NotificationService implements INotificationService {
 					connectionProperties.getNotificationTemplateTargetUrlValue());
 			tagValues.put(connectionProperties.getNotificationTemplateStatus(), status);
 
-			notificationEvent.setEventId(eventId);
-			notificationEvent.setRecipients(recipients);
-			notificationEvent.setTagValues(tagValues);
+            notificationEvent.setMode(connectionProperties.getNotificationv2Mode());
+            notificationEvent.setDeliveryType(connectionProperties.getNotificationv2DeliveryType());
+            //List<String> toList = recipients.get(connectionProperties.getNotificationTemplateReciepient());
+            //replace recipient ids to email ids
+            List<Map<String,Object>> profiles = profileUtils.getUserProfiles(toList);
+            List<String> toListMails = new ArrayList<>();
+            profiles.forEach(profile -> {
+                toListMails.add(((Map<String,Object>)profile.get(Constants.Profile.PERSONAL_DETAILS)).get("primaryEmail").toString());
+            });
+            notificationEvent.setIds(toListMails);
+
+            NotificationConfig configV2 = new NotificationConfig();
+            configV2.setSender(connectionProperties.getNotificationv2Sender());
+            configV2.setSubject(eventId);
+            notificationEvent.setConfig(configV2);
+
+            NotificationTemplate templateV2 = new NotificationTemplate();
+            templateV2.setId(connectionProperties.getNotificationv2Id());
+            Map<String, String> params = new HashMap<>();
+            if (eventId.equals(connectionProperties.getNotificationTemplateRequest()))
+                params.put("body", replaceWith(connectionProperties.getNotificationv2RequestBody(), tagValues));
+            else if (eventId.equals(connectionProperties.getNotificationTemplateResponse()))
+                params.put("body", replaceWith(connectionProperties.getNotificationv2ResponseBody(), tagValues));
+
+            templateV2.setParams(params);
+            notificationEvent.setTemplate(templateV2);
 
 		}
 		return notificationEvent;
@@ -106,10 +127,7 @@ public class NotificationService implements INotificationService {
 	}
 
 	@Override
-	public ResponseEntity postEvent(String rootOrg, NotificationEventV2 notificationEventv2) {
-		if (rootOrg == null || rootOrg.isEmpty()) {
-			throw new ApplicationException(Constants.Message.ROOT_ORG_INVALID);
-		}
+	public ResponseEntity postEvent(NotificationEvent notificationEventv2) {
 
 		ResponseEntity<?> response = null;
 		try {
@@ -118,13 +136,13 @@ public class NotificationService implements INotificationService {
 			RestTemplate restTemplate = new RestTemplate();
 			HttpHeaders headers = new HttpHeaders();
 			headers.set("Content-Type", "application/json");
-			logger.info("Notification event v2 value ::"+ mapper.writeValueAsString(notificationEventv2));
+			logger.info("Notification event v2 value ::"+ notificationEventv2);
 
-			Map<String, List<NotificationEventV2>> notifications = new HashMap<>();
+			Map<String, List<NotificationEvent>> notifications = new HashMap<>();
 			notifications.put("notifications", Arrays.asList(notificationEventv2));
 			Map<String, Object> nrequest = new HashMap<>();
 			nrequest.put("request", notifications);
-			logger.info("Notification event v2 request ::"+ mapper.writeValueAsString(nrequest));
+			logger.info("Notification event v2 request ::"+ nrequest);
 
 			HttpEntity request = new HttpEntity<>(nrequest, headers);
 			response = restTemplate.exchange(uri, HttpMethod.POST, request, String.class);
@@ -138,67 +156,6 @@ public class NotificationService implements INotificationService {
 		}
 		return response;
 
-	}
-
-	@Override
-	public ResponseEntity postEvent(String rootOrg, NotificationEvent notificationEvent) {
-		if (rootOrg == null || rootOrg.isEmpty()) {
-			throw new ApplicationException(Constants.Message.ROOT_ORG_INVALID);
-		}
-
-		ResponseEntity<?> response = null;
-		try {
-			final String uri = connectionProperties.getNotificationIp()
-					.concat(connectionProperties.getNotificationEventEndpoint());
-			RestTemplate restTemplate = new RestTemplate();
-			HttpHeaders headers = new HttpHeaders();
-			headers.set("Content-Type", "application/json");
-
-			HttpEntity request = new HttpEntity<>(notificationEvent, headers);
-			response = restTemplate.exchange(uri, HttpMethod.POST, request, String.class);
-
-			logger.info(Constants.Message.SENT_NOTIFICATION_SUCCESS, response.getStatusCode());
-
-		} catch (Exception e) {
-			logger.error(Constants.Message.SENT_NOTIFICATION_ERROR, e.getMessage());
-			return new ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR);
-
-		}
-		return response;
-
-	}
-
-	@Override
-	public NotificationEventV2 translate(NotificationEvent notificationEvent) {
-
-		NotificationEventV2 eventV2 = new NotificationEventV2();
-		eventV2.setMode(connectionProperties.getNotificationv2Mode());
-		eventV2.setDeliveryType(connectionProperties.getNotificationv2DeliveryType());
-		List<String> toList = notificationEvent.getRecipients().get(connectionProperties.getNotificationTemplateReciepient());
-		//replace recipient ids to email ids
-		List<Map<String,Object>> profiles = profileUtils.getUserProfiles(toList);
-		List<String> toListMails = new ArrayList<>();
-		profiles.forEach(profile -> {
-			toListMails.add(((Map<String,Object>)profile.get(Constants.Profile.PERSONAL_DETAILS)).get("primaryEmail").toString());
-		});
-		eventV2.setIds(toListMails);
-
-		NotificationConfigV2 configV2 = new NotificationConfigV2();
-		configV2.setSender(connectionProperties.getNotificationv2Sender());
-		configV2.setSubject(notificationEvent.getEventId());
-		eventV2.setConfig(configV2);
-
-		NotificationTemplateV2 templateV2 = new NotificationTemplateV2();
-		templateV2.setId(connectionProperties.getNotificationv2Id());
-		Map<String, String> params = new HashMap<>();
-		if (notificationEvent.getEventId().equals(connectionProperties.getNotificationTemplateRequest()))
-			params.put("body", replaceWith(connectionProperties.getNotificationv2RequestBody(), notificationEvent.getTagValues()));
-		else
-			params.put("body", replaceWith(connectionProperties.getNotificationv2ResponseBody(), notificationEvent.getTagValues()));
-
-		templateV2.setParams(params);
-		eventV2.setTemplate(templateV2);
-		return eventV2;
 	}
 
 

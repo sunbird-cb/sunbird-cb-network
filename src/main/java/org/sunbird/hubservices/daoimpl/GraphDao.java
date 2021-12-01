@@ -1,7 +1,6 @@
 package org.sunbird.hubservices.daoimpl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.micrometer.core.instrument.util.StringUtils;
 import org.neo4j.driver.v1.*;
 import org.neo4j.driver.v1.exceptions.*;
 import org.slf4j.Logger;
@@ -10,8 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 import org.sunbird.cb.hubservices.exception.ErrorCode;
 import org.sunbird.cb.hubservices.exception.GraphException;
-import org.sunbird.cb.hubservices.exception.ValidationException;
-import org.sunbird.cb.hubservices.model.NodeV2;
+import org.sunbird.cb.hubservices.model.Node;
 import org.sunbird.cb.hubservices.util.Constants;
 import org.sunbird.hubservices.dao.IGraphDao;
 
@@ -34,14 +32,11 @@ public class GraphDao implements IGraphDao {
     }
 
     @Override
-    public void upsertNode(NodeV2 node) {
+    public void upsertNode(Node node) {
         Session session = neo4jDriver.session();
         try {
             Transaction transaction = session.beginTransaction();
             try {
-                if (Objects.isNull(node) || StringUtils.isBlank(node.getId())) {
-                    throw new ValidationException("Node identifier cannot be empty");
-                }
 
                 Map<String, Object> props = new HashMap<>();
                 props = new ObjectMapper().convertValue(node, Map.class);
@@ -56,11 +51,10 @@ public class GraphDao implements IGraphDao {
 
                 StatementResult result = transaction.run(statement);
                 result.consume();
-                transaction.commitAsync().toCompletableFuture();
+                transaction.commitAsync();
                 logger.info("user node with id {} created successfully ", node.getId());
 
             } catch (ClientException e) {
-                transaction.rollbackAsync().toCompletableFuture();
                 if (e.getMessage().contains("already exists"))
                     logger.error("user node upsertion failed : {}", e.getMessage());
                 else throw new GraphException(ErrorCode.GRAPH_TRANSACTIONAL_ERROR.name(), e.getMessage());
@@ -77,59 +71,47 @@ public class GraphDao implements IGraphDao {
     }
 
     @Override
-    public void upsertRelation(String fromUUID, String toUUID, Map<String, String> relationProperties) {
+    public void upsertRelation(Node nodeFrom, Node nodeTo, Map<String, String> relationProperties) {
         Session session = neo4jDriver.session();
         try {
             Transaction transaction = session.beginTransaction();
             try {
-                if (StringUtils.isBlank(fromUUID) || StringUtils.isBlank(toUUID) || CollectionUtils.isEmpty(relationProperties)) {
-                    throw new ValidationException("UUIDs or properties cannot be empty");
-                }
 
                 Map<String, Object> parameters = new HashMap<>();
-                parameters.put("fromUUID", fromUUID);
-                parameters.put("toUUID", toUUID);
-                //parameters.put("propertyValue", propertyValue);
+                parameters.put("fromUUID", nodeFrom.getId());
+                parameters.put("toUUID", nodeTo.getId());
                 parameters.put(Constants.Graph.PROPS.getValue(), relationProperties);
 
                 StringBuilder query = new StringBuilder();
-                query.append("MATCH (n:").append(label).append("), (n1:").append(label)
-                        .append(") WHERE n.id = $fromUUID AND n1.id = $toUUID RETURN n,n1");
+                query.append("MATCH (n:").append(label).append(")-[r:connect]->(n1:").append(label)
+                        .append(") WHERE n.id = $fromUUID AND n1.id = $toUUID ").append("SET r").append(" = ")
+                        .append("$props ").append("RETURN n,n1");
+
                 Statement statement = new Statement(query.toString(), parameters);
                 StatementResult result = transaction.run(statement);
                 int recordSize = result.list().size();
                 result.consume();
-                if (recordSize == 0) { // nodes has no relation
-                    throw new GraphException(ErrorCode.RECORD_NOT_FOUND_ERROR.name(), "users with toUUID {" + toUUID + "} or fromUUID {" + fromUUID + "} not found");
-                } else {
+                if (recordSize == 0) { // nodes relation doesnot exists
+
                     query = new StringBuilder();
-                    query.append("MATCH (n:").append(label).append(")-[r:connect]->(n1:").append(label)
-                            .append(") WHERE n.id = $fromUUID AND n1.id = $toUUID ").append("SET r").append(" = ")
-                            .append("$props ").append("RETURN n,n1");
+                    query.append("MATCH (n:").append(label).append("), (n1:").append(label)
+                            .append(") WHERE n.id = $fromUUID AND n1.id = $toUUID ").append("CREATE (n)-[r:connect]->(n1) ")
+                            .append("SET r").append(" = ").append("$props ").append("RETURN n,n1");
 
                     statement = new Statement(query.toString(), parameters);
                     result = transaction.run(statement);
                     recordSize = result.list().size();
                     result.consume();
-                    if (recordSize == 0) {
-
-                        //TODO: use 1 query to figure out if the nodes/relation exists and then addNode & add/update the relation accordingly
-                        query = new StringBuilder();
-                        query.append("MATCH (n:").append(label).append("), (n1:").append(label)
-                                .append(") WHERE n.id = $fromUUID AND n1.id = $toUUID ").append("CREATE (n)-[r:connect]->(n1) ")
-                                .append("SET r").append(" = ").append("$props ").append("RETURN n,n1");
-
-                        statement = new Statement(query.toString(), parameters);
-                        result = transaction.run(statement);
-                        result.consume();
-
+                    if(recordSize == 0){
+                        logger.info("user relation with toUUID {} and fromUUID {} failed to update ", nodeTo.getId(), nodeFrom.getId());
+                        throw new GraphException(ErrorCode.GRAPH_TRANSACTIONAL_ERROR.name(), "user relation with "+nodeTo.getId()+" and "+nodeFrom.getId()+" failed to update ");
                     }
-                    transaction.commitAsync().toCompletableFuture();
-                    logger.info("user relation with toUUID {} and fromUUID {} updated successfully ", toUUID, fromUUID);
 
                 }
+                transaction.commitAsync();
+                logger.info("user relation with toUUID {} and fromUUID {} updated successfully ", nodeTo.getId(), nodeFrom.getId());
+
             } catch (ClientException e) {
-                transaction.rollbackAsync().toCompletableFuture();
                 throw new GraphException(ErrorCode.GRAPH_TRANSACTIONAL_ERROR.name(), e.getMessage());
 
             } finally {
@@ -144,14 +126,11 @@ public class GraphDao implements IGraphDao {
     }
 
     @Override
-    public List<NodeV2> getNeighbours(String UUID, Map<String, String> relationProperties, Constants.DIRECTION direction, int offset, int limit, List<String> attributes) {
+    public List<Node> getNeighbours(String UUID, Map<String, String> relationProperties, Constants.DIRECTION direction, int offset, int limit, List<String> attributes) {
         Session session = neo4jDriver.session();
         try {
             Transaction transaction = session.beginTransaction();
             try {
-                if (CollectionUtils.isEmpty(relationProperties) || StringUtils.isBlank(UUID)) {
-                    throw new ValidationException("UUID, property, direction cannot be empty");
-                }
 
                 Map<String, Object> parameters = new HashMap<>();
                 parameters.put(Constants.Graph.UUID.getValue(), UUID);
@@ -186,13 +165,11 @@ public class GraphDao implements IGraphDao {
                 StatementResult result = transaction.run(statement);
                 List<Record> records = result.list();
 
-                transaction.commitAsync().toCompletableFuture();
-                List<NodeV2> nodes = getNodes(records);
+                List<Node> nodes = getNodes(records);
                 logger.info("Neighbour users for UUID {} found successfully ", UUID);
                 return nodes;
 
             } catch (ClientException e) {
-                transaction.rollbackAsync().toCompletableFuture();
                 throw new GraphException(ErrorCode.GRAPH_TRANSACTIONAL_ERROR.name(), e.getMessage());
 
             } finally {
@@ -214,9 +191,6 @@ public class GraphDao implements IGraphDao {
         try {
             Transaction transaction = session.beginTransaction();
             try {
-                if (StringUtils.isBlank(UUID)) {
-                    throw new ValidationException("UUID cannot be empty");
-                }
 
                 Map<String, Object> parameters = new HashMap<>();
                 parameters.put(Constants.Graph.UUID.getValue(), UUID);
@@ -244,11 +218,9 @@ public class GraphDao implements IGraphDao {
                 List<Record> records = result.list();
                 result.consume();
                 count = records.get(0).get("count(*)").asInt();
-                transaction.commitAsync().toCompletableFuture();
                 logger.info("{} nodes count.", count);
 
             } catch (ClientException e) {
-                transaction.rollbackAsync().toCompletableFuture();
                 throw new GraphException(ErrorCode.GRAPH_TRANSACTIONAL_ERROR.name(), e.getMessage());
 
             } finally {
@@ -263,8 +235,8 @@ public class GraphDao implements IGraphDao {
 
     }
 
-    private List<NodeV2> getNodes(List<Record> records) {
-        List<NodeV2> nodes = new ArrayList<>();
+    private List<Node> getNodes(List<Record> records) {
+        List<Node> nodes = new ArrayList<>();
         if (records.size() > 0) {
             for (Record record : records) {
 
@@ -286,7 +258,7 @@ public class GraphDao implements IGraphDao {
                     }
 
                 }
-                NodeV2 nodePojo = new NodeV2(id);
+                Node nodePojo = new Node(id);
                 nodes.add(nodePojo);
 
             }

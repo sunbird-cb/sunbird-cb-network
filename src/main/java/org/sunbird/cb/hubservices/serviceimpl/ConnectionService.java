@@ -31,22 +31,24 @@ public class ConnectionService implements IConnectionService {
 	INodeService nodeService;
 
 
-	public Response upsert(String rootOrg, ConnectionRequestV2 request) throws Exception {
+	public Response upsert(ConnectionRequest request) throws Exception {
 
 		Response response = new Response();
 		try {
 
-			NodeV2 from = new NodeV2(request.getUserIdFrom());
-			NodeV2 to = new NodeV2(request.getUserIdTo());
+			Node from = new Node(request.getUserIdFrom());
+			Node to = new Node(request.getUserIdTo());
 			Map<String,String> relP = new HashMap<>();
 			relP.put(Constants.Graph.STATUS.getValue(), request.getStatus());
+			relP.put(Constants.Graph.CREATED_AT.getValue(), request.getCreatedAt());
+			relP.put(Constants.Graph.UPDATED_AT.getValue(), request.getUpdatedAt());
 
 			boolean created = nodeService.connect(from, to, relP);
 			if(!created)
 				throw new ApplicationException(Constants.Message.FAILED_CONNECTION);
 
 			if (connectionProperties.isNotificationEnabled() && created)
-				sendNotification(rootOrg, connectionProperties.getNotificationTemplateRequest(), request.getUserIdFrom(),
+				sendNotification(connectionProperties.getNotificationTemplateRequest(), request.getUserIdFrom(),
 						request.getUserIdTo(), request.getStatus());
 
 			response.put(Constants.ResponseStatus.MESSAGE, Constants.ResponseStatus.SUCCESSFUL);
@@ -62,9 +64,9 @@ public class ConnectionService implements IConnectionService {
 	}
 
 	@Override
-	public void sendNotification(String rootOrg, String eventId, String sender, String reciepient, String status) {
+	public void sendNotification(String eventId, String sender, String reciepient, String status) {
 		NotificationEvent event = notificationService.buildEvent(eventId, sender, reciepient, status);
-		notificationService.postEvent(rootOrg, notificationService.translate(event));
+		notificationService.postEvent(event);
 	}
 
 	@Override
@@ -85,10 +87,10 @@ public class ConnectionService implements IConnectionService {
 			}
 			Map<String, String> relationProperties = new HashMap<>();
 			relationProperties.put(Constants.Graph.STATUS.getValue(), Constants.Status.APPROVED);
-			List<NodeV2> nodes = nodeService.getNodeNextLevel(userId,relationProperties,offset,limit);
+			List<Node> nodes = nodeService.getNodeNextLevel(userId,relationProperties,offset,limit);
 
 			List<String> allNodesIds = findUserConnectionsV2(userId, Constants.Status.APPROVED);
-			List<NodeV2> detachedNodes = nodes.stream().filter(node -> !allNodesIds.contains(node.getId()))
+			List<Node> detachedNodes = nodes.stream().filter(node -> !allNodesIds.contains(node.getId()))
 					.collect(Collectors.toList());
 
 			if (detachedNodes.isEmpty()) {
@@ -117,7 +119,7 @@ public class ConnectionService implements IConnectionService {
 			}
 			Map<String, String> relationProperties = new HashMap<>();
 			relationProperties.put(Constants.Graph.STATUS.getValue(), status);
-			List<NodeV2> nodes = nodeService.getAllNodes(userId, relationProperties, offset, limit);
+			List<Node> nodes = nodeService.getAllNodes(userId, relationProperties, offset, limit);
 			int count = nodeService.getNodesCount(userId, relationProperties, null);
 
 			response.put(Constants.ResponseStatus.PAGENO, offset);
@@ -149,7 +151,7 @@ public class ConnectionService implements IConnectionService {
 			Map<String, String> relationProperties = new HashMap<>();
 			relationProperties.put(Constants.Graph.STATUS.getValue(), Constants.Status.PENDING);
 
-			List<NodeV2> nodes = new ArrayList<>();
+			List<Node> nodes = new ArrayList<>();
 			if (direction.equals(Constants.DIRECTION.IN))
 				nodes = nodeService.getNodeByInRelation(userId, relationProperties, offset, limit);
 
