@@ -93,11 +93,6 @@ public class ConnectionService implements IConnectionService {
 			List<Node> detachedNodes = nodes.stream().filter(node -> !allNodesIds.contains(node.getId()))
 					.collect(Collectors.toList());
 
-			if (detachedNodes.isEmpty()) {
-				response.put(Constants.ResponseStatus.MESSAGE, Constants.ResponseStatus.FAILED);
-				response.put(Constants.ResponseStatus.DATA, detachedNodes);
-				response.put(Constants.ResponseStatus.STATUS, HttpStatus.NO_CONTENT);
-			}
 			response.put(Constants.ResponseStatus.MESSAGE, Constants.ResponseStatus.SUCCESSFUL);
 			response.put(Constants.ResponseStatus.DATA, detachedNodes);
 			response.put(Constants.ResponseStatus.STATUS, HttpStatus.OK);
@@ -125,11 +120,6 @@ public class ConnectionService implements IConnectionService {
 			response.put(Constants.ResponseStatus.PAGENO, offset);
 			response.put(Constants.ResponseStatus.TOTALHIT, count);
 
-			if (nodes.isEmpty()) {
-				response.put(Constants.ResponseStatus.MESSAGE, Constants.ResponseStatus.FAILED);
-				response.put(Constants.ResponseStatus.DATA, nodes);
-				response.put(Constants.ResponseStatus.STATUS, HttpStatus.NO_CONTENT);
-			}
 			response.put(Constants.ResponseStatus.MESSAGE, Constants.ResponseStatus.SUCCESSFUL);
 			response.put(Constants.ResponseStatus.DATA, nodes);
 			response.put(Constants.ResponseStatus.STATUS, HttpStatus.OK);
@@ -158,11 +148,6 @@ public class ConnectionService implements IConnectionService {
 			else
 				nodes = nodeService.getNodeByOutRelation(userId, relationProperties, offset, limit);
 
-			if (nodes.isEmpty()) {
-				response.put(Constants.ResponseStatus.MESSAGE, Constants.ResponseStatus.FAILED);
-				response.put(Constants.ResponseStatus.DATA, nodes);
-				response.put(Constants.ResponseStatus.STATUS, HttpStatus.NO_CONTENT);
-			}
 			response.put(Constants.ResponseStatus.MESSAGE, Constants.ResponseStatus.SUCCESSFUL);
 			response.put(Constants.ResponseStatus.DATA, nodes);
 			response.put(Constants.ResponseStatus.STATUS, HttpStatus.OK);

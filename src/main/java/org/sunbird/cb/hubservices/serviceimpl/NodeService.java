@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import org.sunbird.cb.hubservices.exception.ErrorCode;
 import org.sunbird.cb.hubservices.exception.GraphException;
 import org.sunbird.cb.hubservices.exception.ValidationException;
 import org.sunbird.cb.hubservices.model.Node;
@@ -97,15 +98,7 @@ public class NodeService implements INodeService {
     }
 
     private List<Node> getNodesWith(String identifier, Map<String, String> relationProperties, Constants.DIRECTION direction, int offset, int size, List<String> attr) {
-        List<Node> nodes = Collections.emptyList();
-        try {
-            nodes = graphDao.getNeighbours(identifier, relationProperties, direction, offset, size, attr);
-        } catch (GraphException d) {
-            logger.error(" Fetching user nodes for relations failed : {}", d);
-        }
-        return nodes;
-
-
+        return graphDao.getNeighbours(identifier, relationProperties, direction, offset, size, attr);
     }
 
     private void checkParams(String identifier, Map<String, String> relationProperties) {
