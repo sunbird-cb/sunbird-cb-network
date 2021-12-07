@@ -8,15 +8,11 @@ import java.util.Map;
 
 public interface INodeService {
 
-    public Boolean connect(Node from, Node to, Map<String, String> relationProperties);
-
-    public List<Node> getNodeByOutRelation(String identifier, Map<String, String> relationProperties, int offset, int size);
-
-    public List<Node> getNodeByInRelation(String identifier, Map<String, String> relationProperties, int offset, int size);
-
-    public List<Node> getAllNodes(String identifier, Map<String, String> relationProperties, int offset, int size);
+    public void connect(Node from, Node to, Map<String, String> relationProperties);
 
     public List<Node> getNodeNextLevel(String identifier, Map<String, String> relationProperties, int offset, int size);
 
     public int getNodesCount(String identifier, Map<String, String> relationProperties, Constants.DIRECTION direction);
+
+    public List<Node> getNodes(String identifier, Map<String, String> relationProperties, Constants.DIRECTION direction, int offset, int size, List<String> attributes);
 }

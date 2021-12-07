@@ -82,21 +82,33 @@ public class GraphDao implements IGraphDao {
                 parameters.put("toUUID", nodeTo.getId());
                 parameters.put(Constants.Graph.PROPS.getValue(), relationProperties);
 
-                StringBuilder query = new StringBuilder();
-                query.append("MATCH (n:").append(label).append(")-[r:connect]->(n1:").append(label)
-                        .append(") WHERE n.id = $fromUUID AND n1.id = $toUUID ").append("SET r").append(" = ")
-                        .append("$props ").append("RETURN n,n1");
+                StringBuilder queryNodeExistWithReverseEdge = new StringBuilder();
+                queryNodeExistWithReverseEdge.append("MATCH (n:").append(label).append(")<-[r:connect]-(n1:").append(label)
+                        .append(") WHERE n.id = $fromUUID AND n1.id = $toUUID ").append("RETURN n,n1");
 
-                Statement statement = new Statement(query.toString(), parameters);
+                Statement statement = new Statement(queryNodeExistWithReverseEdge.toString(), parameters);
                 StatementResult result = transaction.run(statement);
                 int recordSize = result.list().size();
+                result.consume();
+                if(recordSize!=0)
+                    throw new GraphException(ErrorCode.NODES_WITH_REVERSE_EDGE_EXISTS.name(), "Nodes exists with reverse edge, new relation cannot be created!");
+
+
+                StringBuilder query = new StringBuilder();
+                query.append("MATCH (n:").append(label).append(")-[r:connect]->(n1:").append(label)
+                        .append(") WHERE n.id = $fromUUID AND n1.id = $toUUID ").append("SET r").append(" += ")
+                        .append("$props ").append("RETURN n,n1");
+
+                statement = new Statement(query.toString(), parameters);
+                result = transaction.run(statement);
+                recordSize = result.list().size();
                 result.consume();
                 if (recordSize == 0) { // nodes relation doesnot exists
 
                     query = new StringBuilder();
                     query.append("MATCH (n:").append(label).append("), (n1:").append(label)
                             .append(") WHERE n.id = $fromUUID AND n1.id = $toUUID ").append("CREATE (n)-[r:connect]->(n1) ")
-                            .append("SET r").append(" = ").append("$props ").append("RETURN n,n1");
+                            .append("SET r").append(" += ").append("$props ").append("RETURN n,n1");
 
                     statement = new Statement(query.toString(), parameters);
                     result = transaction.run(statement);
@@ -110,64 +122,6 @@ public class GraphDao implements IGraphDao {
                 }
                 transaction.commitAsync();
                 logger.info("user relation with toUUID {} and fromUUID {} updated successfully ", nodeTo.getId(), nodeFrom.getId());
-
-            } catch (ClientException e) {
-                throw new GraphException(ErrorCode.GRAPH_TRANSACTIONAL_ERROR.name(), e.getMessage());
-
-            } finally {
-                transaction.close();
-            }
-        } catch (SessionExpiredException se) {
-            throw new GraphException(ErrorCode.GRAPH_SESSION_EXPIRED_ERROR.name(), se.getMessage());
-        } finally {
-            session.close();
-        }
-
-    }
-
-    @Override
-    public List<Node> getNeighbours(String UUID, Map<String, String> relationProperties, Constants.DIRECTION direction, int offset, int limit, List<String> attributes) {
-        Session session = neo4jDriver.session();
-        try {
-            Transaction transaction = session.beginTransaction();
-            try {
-
-                Map<String, Object> parameters = new HashMap<>();
-                parameters.put(Constants.Graph.UUID.getValue(), UUID);
-                parameters.put(Constants.Graph.PROPS.getValue(), relationProperties);
-
-                StringBuilder query = new StringBuilder();
-
-                if (direction == Constants.DIRECTION.OUT) {
-                    query.append("MATCH (n:").append(label).append(")-[r:connect]->(n1:").append(label)
-                            .append(") WHERE n.id = $UUID ");
-                } else if(direction == Constants.DIRECTION.IN) {
-                    query.append("MATCH (n:").append(label).append(")<-[r:connect]-(n1:").append(label)
-                            .append(") WHERE n.id = $UUID ");
-                } else {
-                    query.append("MATCH (n:").append(label).append(")-[r:connect]-(n1:").append(label)
-                            .append(") WHERE n.id = $UUID ");
-                }
-
-                relationProperties.entrySet().forEach(r -> query.append(" AND r.").append(r.getKey()).append(" = ").append("'" + r.getValue() + "'"));
-                query.append(" RETURN ");
-                StringBuilder sb = new StringBuilder();
-                if(!CollectionUtils.isEmpty(attributes)){
-                    attributes.stream().forEach( attribute -> sb.append("n1.").append(attribute).append(","));
-                    sb.deleteCharAt(sb.length()-1);
-                } else {
-                    sb.append("n1");
-                }
-                query.append(sb).append(" Skip ").append(offset).append(" limit ").append(limit);
-
-                Statement statement = new Statement(query.toString(), parameters);
-
-                StatementResult result = transaction.run(statement);
-                List<Record> records = result.list();
-
-                List<Node> nodes = getNodes(records);
-                logger.info("Neighbour users for UUID {} found successfully ", UUID);
-                return nodes;
 
             } catch (ClientException e) {
                 throw new GraphException(ErrorCode.GRAPH_TRANSACTIONAL_ERROR.name(), e.getMessage());
@@ -264,6 +218,70 @@ public class GraphDao implements IGraphDao {
             }
         }
         return nodes;
+    }
+
+    public List<Node> getNeighbours(String UUID, Map<String, String> relationProperties, Constants.DIRECTION direction, int level, int offset, int limit, List<String> attributes) {
+        Session session = neo4jDriver.session();
+        try {
+            Transaction transaction = session.beginTransaction();
+            try {
+
+                if(level==0)
+                    throw new GraphException(ErrorCode.RECORD_NOT_FOUND_ERROR.name(), "Oth level have no neighbours ");
+
+                Map<String, Object> parameters = new HashMap<>();
+                parameters.put("UUID", UUID);
+                parameters.put("props", relationProperties);
+
+                StringBuilder linkNthLevel = new StringBuilder();
+                for (int i = 0; i <=level; i++) {
+                    if (direction == Constants.DIRECTION.OUT)
+                        linkNthLevel.append("(n").append(i).append(":").append(label).append(")").append("-[r").append(i).append(":connect]->");
+                    if (direction == Constants.DIRECTION.IN)
+                        linkNthLevel.append("(n").append(i).append(":").append(label).append(")").append("<-[r").append(i).append(":connect]-");
+                    if(direction==null)
+                        linkNthLevel.append("(n").append(i).append(":").append(label).append(")").append("-[r").append(i).append(":connect]-");
+                }
+                String s = linkNthLevel.substring(0,linkNthLevel.lastIndexOf("[")-1);
+
+                StringBuilder query = new StringBuilder();
+                query.append("MATCH ").append(s)
+                        .append(" WHERE n0.id = $UUID ");
+
+                relationProperties.entrySet().forEach(r -> query.append(" AND r").append(level-1).append(".").append(r.getKey()).append(" = ").append("'" + r.getValue() + "'"));
+                query.append(" RETURN ");
+                StringBuilder sb = new StringBuilder();
+                if(!CollectionUtils.isEmpty(attributes)){
+                    attributes.stream().forEach( attribute -> sb.append("n").append(level).append(".").append(attribute).append(","));
+                    sb.deleteCharAt(sb.length()-1);
+                } else {
+                    sb.append("n").append(level);
+                }
+                query.append(sb).append(" Skip ").append(offset).append(" limit ").append(limit);
+
+                System.out.println("query-> "+query);
+                Statement statement = new Statement(query.toString(), parameters);
+
+                StatementResult result = transaction.run(statement);
+                List<Record> records = result.list();
+
+                transaction.commitAsync().toCompletableFuture();
+                logger.info("Neighbour users for UUID {} found successfully ", UUID);
+                return getNodes(records);
+
+            } catch (ClientException e) {
+                transaction.rollbackAsync().toCompletableFuture();
+                throw new GraphException(ErrorCode.GRAPH_TRANSACTIONAL_ERROR.name(), e.getMessage());
+
+            } finally {
+                transaction.close();
+            }
+        } catch (SessionExpiredException se) {
+            throw new GraphException(ErrorCode.GRAPH_SESSION_EXPIRED_ERROR.name(), se.getMessage());
+        } finally {
+            session.close();
+        }
+
     }
 
 }

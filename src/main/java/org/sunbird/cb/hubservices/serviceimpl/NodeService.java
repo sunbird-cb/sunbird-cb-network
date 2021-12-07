@@ -6,7 +6,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
-import org.sunbird.cb.hubservices.exception.ErrorCode;
 import org.sunbird.cb.hubservices.exception.GraphException;
 import org.sunbird.cb.hubservices.exception.ValidationException;
 import org.sunbird.cb.hubservices.model.Node;
@@ -25,48 +24,23 @@ public class NodeService implements INodeService {
     private IGraphDao graphDao;
 
     @Override
-    public Boolean connect(Node from, Node to, Map<String, String> relationProperties) {
+    public void connect(Node from, Node to, Map<String, String> relationProperties) {
 
-        Boolean flag = Boolean.FALSE;
         if (Objects.isNull(from) || Objects.isNull(to) || CollectionUtils.isEmpty(relationProperties)) {
             throw new ValidationException("Node(s) or relation properties cannot be empty");
         }
-        try {
-            graphDao.upsertNode(from);
-            graphDao.upsertNode(to);
-            graphDao.upsertRelation(from, to, relationProperties);
-            flag = Boolean.TRUE;
-            logger.info("user connection successful");
 
-        } catch (GraphException d) {
-            logger.error("node connection failed : {}", d);
+        graphDao.upsertNode(from);
+        graphDao.upsertNode(to);
+        graphDao.upsertRelation(from, to, relationProperties);
+        logger.info("user connection successful");
 
-        }
-        return flag;
     }
 
     @Override
-    public List<Node> getNodeByOutRelation(String identifier, Map<String, String> relationProperties, int offset, int size) {
-
+    public List<Node> getNodes(String identifier, Map<String, String> relationProperties, Constants.DIRECTION direction, int offset, int size, List<String> attributes) {
         checkParams(identifier, relationProperties);
-
-        return getNodesWith(identifier, relationProperties, Constants.DIRECTION.OUT, offset, size, null);
-    }
-
-    @Override
-    public List<Node> getNodeByInRelation(String identifier, Map<String, String> relationProperties, int offset, int size) {
-
-        checkParams(identifier, relationProperties);
-
-        return getNodesWith(identifier, relationProperties, Constants.DIRECTION.IN, offset, size, null);
-    }
-
-    @Override
-    public List<Node> getAllNodes(String identifier, Map<String, String> relationProperties, int offset, int size) {
-
-        checkParams(identifier, relationProperties);
-
-        return getNodesWith(identifier, relationProperties, null, offset, size, Arrays.asList(Constants.Graph.ID.getValue()));
+        return getNodesWith(identifier, relationProperties, direction, offset, size, attributes);
     }
 
     @Override
@@ -87,18 +61,12 @@ public class NodeService implements INodeService {
 
     @Override
     public List<Node> getNodeNextLevel(String identifier, Map<String, String> relationProperties, int offset, int size) {
-
         checkParams(identifier, relationProperties);
-
-        List<Node> nodes = new ArrayList<>();
-        for (Node n : getNodesWith(identifier, relationProperties, Constants.DIRECTION.OUT, offset, size,null)) {
-            nodes.addAll(getNodesWith(n.getId(), relationProperties, Constants.DIRECTION.OUT, offset, size, null));
-        }
-        return nodes;
+        return graphDao.getNeighbours(identifier, relationProperties, Constants.DIRECTION.OUT, 2,  offset, size, Arrays.asList(Constants.Graph.ID.getValue()));
     }
 
-    private List<Node> getNodesWith(String identifier, Map<String, String> relationProperties, Constants.DIRECTION direction, int offset, int size, List<String> attr) {
-        return graphDao.getNeighbours(identifier, relationProperties, direction, offset, size, attr);
+    private List<Node> getNodesWith(String identifier, Map<String, String> relationProperties, Constants.DIRECTION direction, int offset, int size, List<String> attributes) {
+        return graphDao.getNeighbours(identifier, relationProperties, direction, 1, offset, size, attributes);
     }
 
     private void checkParams(String identifier, Map<String, String> relationProperties) {

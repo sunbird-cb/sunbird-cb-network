@@ -12,7 +12,7 @@ public interface IGraphDao {
 
     public void upsertRelation(Node nodeFrom, Node nodeTo, Map<String, String> relationProperties);
 
-    public List<Node> getNeighbours(String UUID, Map<String, String> relationProperties, Constants.DIRECTION direction, int offset, int limit, List<String> attributes);
-
     public int getNeighboursCount(String UUID, Map<String, String> relationProperties, Constants.DIRECTION direction);
+
+    public List<Node> getNeighbours(String UUID, Map<String, String> relationProperties, Constants.DIRECTION direction, int level, int offset, int limit, List<String> attributes);
 }

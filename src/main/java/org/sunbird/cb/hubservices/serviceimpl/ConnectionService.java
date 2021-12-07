@@ -1,9 +1,6 @@
 package org.sunbird.cb.hubservices.serviceimpl;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,11 +40,9 @@ public class ConnectionService implements IConnectionService {
 			relP.put(Constants.Graph.CREATED_AT.getValue(), request.getCreatedAt());
 			relP.put(Constants.Graph.UPDATED_AT.getValue(), request.getUpdatedAt());
 
-			boolean created = nodeService.connect(from, to, relP);
-			if(!created)
-				throw new ApplicationException(Constants.Message.FAILED_CONNECTION);
+			nodeService.connect(from, to, relP);
 
-			if (connectionProperties.isNotificationEnabled() && created)
+			if (connectionProperties.isNotificationEnabled())
 				sendNotification(connectionProperties.getNotificationTemplateRequest(), request.getUserIdFrom(),
 						request.getUserIdTo(), request.getStatus());
 
@@ -74,7 +69,7 @@ public class ConnectionService implements IConnectionService {
 
 		Map<String, String> relationProperties = new HashMap<>();
 		relationProperties.put(Constants.Graph.STATUS.getValue(), status);
-		return nodeService.getAllNodes(userId, relationProperties, 0, connectionProperties.getMaxNodeSize()).stream().map(node -> node.getId()).collect(Collectors.toList());
+		return nodeService.getNodes(userId, relationProperties, null, 0, connectionProperties.getMaxNodeSize(), Arrays.asList(Constants.Graph.ID.getValue())).stream().map(node -> node.getId()).collect(Collectors.toList());
 
 	}
 	@Override
@@ -114,7 +109,7 @@ public class ConnectionService implements IConnectionService {
 			}
 			Map<String, String> relationProperties = new HashMap<>();
 			relationProperties.put(Constants.Graph.STATUS.getValue(), status);
-			List<Node> nodes = nodeService.getAllNodes(userId, relationProperties, offset, limit);
+			List<Node> nodes = nodeService.getNodes(userId, relationProperties, null, offset, limit, Arrays.asList(Constants.Graph.ID.getValue()));
 			int count = nodeService.getNodesCount(userId, relationProperties, null);
 
 			response.put(Constants.ResponseStatus.PAGENO, offset);
@@ -141,12 +136,7 @@ public class ConnectionService implements IConnectionService {
 			Map<String, String> relationProperties = new HashMap<>();
 			relationProperties.put(Constants.Graph.STATUS.getValue(), Constants.Status.PENDING);
 
-			List<Node> nodes = new ArrayList<>();
-			if (direction.equals(Constants.DIRECTION.IN))
-				nodes = nodeService.getNodeByInRelation(userId, relationProperties, offset, limit);
-
-			else
-				nodes = nodeService.getNodeByOutRelation(userId, relationProperties, offset, limit);
+			List<Node> nodes = 	nodeService.getNodes(userId, relationProperties, direction, offset, limit, null);
 
 			response.put(Constants.ResponseStatus.MESSAGE, Constants.ResponseStatus.SUCCESSFUL);
 			response.put(Constants.ResponseStatus.DATA, nodes);
