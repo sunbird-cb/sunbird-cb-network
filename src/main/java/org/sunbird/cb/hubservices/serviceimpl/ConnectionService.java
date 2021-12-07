@@ -37,8 +37,10 @@ public class ConnectionService implements IConnectionService {
 			Node to = new Node(request.getUserIdTo());
 			Map<String,String> relP = new HashMap<>();
 			relP.put(Constants.Graph.STATUS.getValue(), request.getStatus());
-			relP.put(Constants.Graph.CREATED_AT.getValue(), request.getCreatedAt());
-			relP.put(Constants.Graph.UPDATED_AT.getValue(), request.getUpdatedAt());
+			if(request.getCreatedAt()!=null)
+				relP.put(Constants.Graph.CREATED_AT.getValue(), request.getCreatedAt());
+			if(request.getUpdatedAt()!=null)
+			  relP.put(Constants.Graph.UPDATED_AT.getValue(), request.getUpdatedAt());
 
 			nodeService.connect(from, to, relP);
 
