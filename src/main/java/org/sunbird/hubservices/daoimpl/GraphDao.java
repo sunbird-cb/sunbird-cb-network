@@ -242,7 +242,7 @@ public class GraphDao implements IGraphDao {
                     if(direction==null)
                         linkNthLevel.append("(n").append(i).append(":").append(label).append(")").append("-[r").append(i).append(":connect]-");
                 }
-                String s = linkNthLevel.substring(0,linkNthLevel.lastIndexOf("[")-1);
+                String s = (direction == Constants.DIRECTION.IN) ? linkNthLevel.substring(0, linkNthLevel.lastIndexOf("[") - 2) : linkNthLevel.substring(0, linkNthLevel.lastIndexOf("[") - 1);
 
                 StringBuilder query = new StringBuilder();
                 query.append("MATCH ").append(s)
