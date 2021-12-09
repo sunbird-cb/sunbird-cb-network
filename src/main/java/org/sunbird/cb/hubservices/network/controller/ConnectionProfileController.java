@@ -30,7 +30,7 @@ public class ConnectionProfileController {
 			@RequestParam(required = false, name = "includeSources") String[] includeSources,
 			@RequestBody MultiSearch multiSearch) {
 
-		Response response = profileService.multiSearchProfiles(rootOrg, userId, multiSearch, includeSources);
+		Response response = profileService.multiSearchProfiles(userId, multiSearch, includeSources);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
@@ -40,7 +40,7 @@ public class ConnectionProfileController {
 			@RequestParam(defaultValue = "50", required = false, name = "pageSize") int pageSize,
 			@RequestParam(defaultValue = "0", required = false, name = "pageNo") int pageNo) throws IOException {
 
-		Response response = profileService.findCommonProfile(rootOrg, userId, pageNo, pageSize);
+		Response response = profileService.findCommonProfileV2(userId, pageNo, pageSize);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 
 	}
@@ -51,7 +51,7 @@ public class ConnectionProfileController {
 			@RequestParam(defaultValue = "50", required = false, name = "pageSize") int pageSize,
 			@RequestParam(defaultValue = "0", required = false, name = "pageNo") int pageNo) {
 
-		Response response = profileService.findProfileRequested(rootOrg, userId, pageNo, pageSize,
+		Response response = profileService.findProfileRequestedV2(userId, pageNo, pageSize,
 				Constants.DIRECTION.OUT);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 
@@ -63,7 +63,7 @@ public class ConnectionProfileController {
 			@RequestParam(defaultValue = "50", required = false, name = "pageSize") int pageSize,
 			@RequestParam(defaultValue = "0", required = false, name = "pageNo") int pageNo) {
 
-		Response response = profileService.findProfileRequested(rootOrg, userId, pageNo, pageSize,
+		Response response = profileService.findProfileRequestedV2(userId, pageNo, pageSize,
 				Constants.DIRECTION.IN);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 
@@ -75,7 +75,7 @@ public class ConnectionProfileController {
 			@RequestParam(defaultValue = "50", required = false, name = "pageSize") int pageSize,
 			@RequestParam(defaultValue = "0", required = false, name = "pageNo") int pageNo) {
 
-		Response response = profileService.findProfiles(rootOrg, userId, pageNo, pageSize);
+		Response response = profileService.findProfilesV2(userId, pageNo, pageSize);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 
 	}

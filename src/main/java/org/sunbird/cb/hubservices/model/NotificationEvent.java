@@ -1,51 +1,60 @@
 package org.sunbird.cb.hubservices.model;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 public class NotificationEvent implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
-	@NotBlank
-	@JsonProperty(value = "event-id")
-	private String eventId;
+	private String mode;
+	private String deliveryType;
+	//recipients ids
+	private List<String> ids = new ArrayList<>();
 
-	@JsonProperty(value = "tag-value-pair")
-	private transient Map<String, Object> tagValues;
+	private NotificationConfig config = new NotificationConfig();
+	private NotificationTemplate template = new NotificationTemplate();
 
-	@NotNull
-	@NotEmpty
-	@JsonProperty(value = "recipients")
-	private Map<String, List<String>> recipients;
 
-	public String getEventId() {
-		return eventId;
+	public String getMode() {
+		return mode;
 	}
 
-	public void setEventId(String eventId) {
-		this.eventId = eventId;
+	public void setMode(String mode) {
+		this.mode = mode;
 	}
 
-	public Map<String, Object> getTagValues() {
-		return tagValues;
+	public String getDeliveryType() {
+		return deliveryType;
 	}
 
-	public void setTagValues(Map<String, Object> tagValues) {
-		this.tagValues = tagValues;
+	public void setDeliveryType(String deliveryType) {
+		this.deliveryType = deliveryType;
 	}
 
-	public Map<String, List<String>> getRecipients() {
-		return recipients;
+	public List<String> getIds() {
+		return ids;
 	}
 
-	public void setRecipients(Map<String, List<String>> recipients) {
-		this.recipients = recipients;
+	public void setIds(List<String> ids) {
+		this.ids = ids;
+	}
+
+	public NotificationConfig getConfig() {
+		return config;
+	}
+
+	public void setConfig(NotificationConfig config) {
+		this.config = config;
+	}
+
+	public NotificationTemplate getTemplate() {
+		return template;
+	}
+
+	public void setTemplate(NotificationTemplate template) {
+		this.template = template;
 	}
 }

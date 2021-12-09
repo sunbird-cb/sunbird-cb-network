@@ -6,6 +6,9 @@ import org.springframework.stereotype.Component;
 @Component
 public class ConnectionProperties {
 
+	@Value("${max.node.size}")
+	private int maxNodeSize;
+
 	@Value("${es.host}")
 	private String esHost;
 
@@ -191,4 +194,10 @@ public class ConnectionProperties {
 	public String getUserReadEndPoint() {
 		return userReadEndPoint;
 	}
+
+	public int getMaxNodeSize() {
+		return maxNodeSize;
+	}
 }
+
+

@@ -3,8 +3,7 @@ package org.sunbird.cb.hubservices.util;
 public class Constants {
 
 	public static enum Graph {
-		NODE("n"), NODEID("nodeId"), IDENTIFIER("identifier"), LEVEL("level"), TYPE("type"), NAME("name"),
-		RELATION_LABEL("IS_PARENT_OF");
+		ID("id"), STATUS("status"), UUID("UUID"), PROPS("props"), CREATED_AT("createdAt"), UPDATED_AT("updatedAt");
 
 		private String value;
 
@@ -18,10 +17,6 @@ public class Constants {
 	}
 
 	private static final String UTIL_CLASS = "Utility class";
-
-	public enum STATUS {
-		APPROVED, REJECTED, PENDING
-	}
 
 	public enum DIRECTION {
 		IN, OUT
@@ -45,7 +40,7 @@ public class Constants {
 		}
 
 		public static final String CONNECTION_EXCEPTION_OCCURED = "Connection exception occurred: {}";
-		public static final String FAILED_CONNECTION = "Failed user connections";
+		public static final String FAILED_CONNECTION = "Failed user connections: ";
 		public static final String USER_ID_INVALID = "user_id cant be null or empty";
 		public static final String ROOT_ORG_INVALID = "rootOrg cant be null or empty";
 		public static final String SENT_NOTIFICATION_ERROR = "Notification event send error occurred: {}";

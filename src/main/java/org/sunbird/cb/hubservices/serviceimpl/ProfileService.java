@@ -1,26 +1,11 @@
 package org.sunbird.cb.hubservices.serviceimpl;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Stream;
-
+import java.util.*;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.elasticsearch.action.search.MultiSearchRequest;
-import org.elasticsearch.action.search.MultiSearchResponse;
-import org.elasticsearch.action.search.SearchRequest;
-import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.search.SearchHit;
-import org.elasticsearch.search.builder.SearchSourceBuilder;
-import org.elasticsearch.search.sort.SortOrder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +18,7 @@ import org.sunbird.cb.hubservices.model.Response;
 import org.sunbird.cb.hubservices.model.Search;
 import org.sunbird.cb.hubservices.profile.handler.ProfileUtils;
 import org.sunbird.cb.hubservices.profile.handler.RegistryRequest;
+import org.sunbird.cb.hubservices.service.IConnectionService;
 import org.sunbird.cb.hubservices.service.IProfileService;
 import org.sunbird.cb.hubservices.util.ConnectionProperties;
 import org.sunbird.cb.hubservices.util.Constants;
@@ -51,61 +37,46 @@ public class ProfileService implements IProfileService {
     ConnectionProperties connectionProperties;
 
     @Autowired
-    ConnectionService connectionService;
+    IConnectionService connectionService;
 
     @Autowired
     ObjectMapper mapper;
 
 
-
     @Override
-    public Response findCommonProfile(String rootOrg, String userId, int offset, int limit) {
+    public Response findCommonProfileV2(String userId, int offset, int limit){
+        return connectionService.findSuggestedConnectionsV2(userId, offset, limit);
+    }
+    @Override
+    public Response findProfilesV2(String userId, int offset, int limit) {
+        return connectionService.findAllConnectionsIdsByStatusV2(userId, Constants.Status.APPROVED, offset, limit);
 
-        Response responseConnections = connectionService.findSuggestedConnections(rootOrg, userId, offset, limit);
-       return responseConnections;
-
+    }
+    @Override
+    public Response findProfileRequestedV2(String userId, int offset, int limit, Constants.DIRECTION direction) {
+        return connectionService.findConnectionsRequestedV2(userId, offset, limit, direction);
 
     }
 
     @Override
-    public Response findProfiles(String rootOrg, String userId, int offset, int limit) {
-
-        Response responseConnections = connectionService.findAllConnectionsIdsByStatus(rootOrg, userId, Constants.Status.APPROVED, offset, limit);
-        return responseConnections;
-
-    }
-
-
-
-    @Override
-    public Response findProfileRequested(String rootOrg, String userId, int offset, int limit, Constants.DIRECTION direction) {
-        Response responseConnections = connectionService.findConnectionsRequested(rootOrg, userId, offset, limit, direction);
-        return  responseConnections;
-
-    }
-
-
-    //TODO: user wrapper layer to connect opensaber
-    @Override
-    public Response multiSearchProfiles(String rootOrg, String userId, MultiSearch mSearchRequest, String[] sourceFields) {
+    public Response multiSearchProfiles(String userId, MultiSearch mSearchRequest, String[] sourceFields) {
 
 
         Response response = new Response();
         try{
-            List<String> connectionIdsToExclude = connectionService.findUserConnections(rootOrg, userId);
+            List<String> connectionIdsToExclude = connectionService.findUserConnectionsV2(userId,Constants.Status.APPROVED);
             connectionIdsToExclude.add(userId);
-            logger.info("connectionIdsToExclude ->"+connectionIdsToExclude);
-
-            logger.info("multisearch request -> "+mapper.writeValueAsString(mSearchRequest));
+            logger.info("multi search request :: {}",mapper.writeValueAsString(mSearchRequest));
 
             List<String> tags = new ArrayList<>();
-
             Map<String, Object> tagRes = new HashMap<>();
+
+            List<String> includeFields = sourceFields != null && Arrays.asList(sourceFields).size()>0 ? Arrays.asList(sourceFields) : ProfileUtils.getUserDefaultFields();
 
             for(Search sRequest: mSearchRequest.getSearch()) {
 
                 StringBuilder searchPath = new StringBuilder();
-                searchPath.append("profileDetails.").append(sRequest.getField());
+                searchPath.append(ProfileUtils.Profile.PROFILE_DETAILS).append(".").append(sRequest.getField());
                 //Prepare of SearchDTO
                 RegistryRequest registryRequest = new RegistryRequest();
                 Map<String, Object> searchQueryMap = new HashMap<>();
@@ -115,6 +86,8 @@ public class ProfileService implements IProfileService {
                 searchQueryMap.put("filters",additionalProperties);
                 searchQueryMap.put("offset",mSearchRequest.getOffset());
                 searchQueryMap.put("limit",mSearchRequest.getSize());
+                searchQueryMap.put("fields",includeFields);
+
                 registryRequest.setRequest(searchQueryMap);
                 tags.add(sRequest.getField());
 
@@ -124,19 +97,18 @@ public class ProfileService implements IProfileService {
                 ArrayNode arrayRes = JsonNodeFactory.instance.arrayNode();
                 ArrayNode nodes = (ArrayNode) node.get("result").get("response").get("content");
                 for (JsonNode n :nodes){
-                    if(!connectionIdsToExclude.contains(n.get("userId").asText())){
-                        ((ObjectNode)n.get("profileDetails")).put("userId",n.get("userId").asText());
-                        ((ObjectNode)n.get("profileDetails")).put("id",n.get("userId").asText());
-                        ((ObjectNode)n.get("profileDetails")).put("@id",n.get("userId").asText());
-
-                        arrayRes.add(n.get("profileDetails"));
+                    if(!connectionIdsToExclude.contains(n.get(ProfileUtils.Profile.USER_ID).asText())){
+                        ((ObjectNode)n.get(ProfileUtils.Profile.PROFILE_DETAILS)).put(ProfileUtils.Profile.USER_ID,n.get(ProfileUtils.Profile.USER_ID).asText());
+                        ((ObjectNode)n.get(ProfileUtils.Profile.PROFILE_DETAILS)).put(ProfileUtils.Profile.ID,n.get(ProfileUtils.Profile.USER_ID).asText());
+                        ((ObjectNode)n.get(ProfileUtils.Profile.PROFILE_DETAILS)).put(ProfileUtils.Profile.AT_ID,n.get(ProfileUtils.Profile.USER_ID).asText());
+                        arrayRes.add(n.get(ProfileUtils.Profile.PROFILE_DETAILS));
                     }
                 }
 
                 tagRes.put(sRequest.getField(), arrayRes);
 
             }
-            logger.info("user search tagRes -->"+mapper.writeValueAsString(tagRes));
+            logger.info("user search result :: {}",mapper.writeValueAsString(tagRes));
 
             List<Object> finalRes = new ArrayList<>();
             for(Map.Entry entry : tagRes.entrySet()){
