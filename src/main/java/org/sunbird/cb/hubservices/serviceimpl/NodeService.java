@@ -26,9 +26,11 @@ public class NodeService implements INodeService {
     @Override
     public void connect(Node from, Node to, Map<String, String> relationProperties) {
 
-        if (Objects.isNull(from) || Objects.isNull(to) || CollectionUtils.isEmpty(relationProperties)) {
+        if (Objects.isNull(from) || Objects.isNull(to) || CollectionUtils.isEmpty(relationProperties))
             throw new ValidationException("Node(s) or relation properties cannot be empty");
-        }
+
+        if(from.getId().equalsIgnoreCase(to.getId()))
+            throw new ValidationException("Both node ids cannot be same");
 
         graphDao.upsertNode(from);
         graphDao.upsertNode(to);
