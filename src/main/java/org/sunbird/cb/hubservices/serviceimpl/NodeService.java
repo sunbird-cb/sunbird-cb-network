@@ -11,7 +11,7 @@ import org.sunbird.cb.hubservices.exception.ValidationException;
 import org.sunbird.cb.hubservices.model.Node;
 import org.sunbird.cb.hubservices.service.INodeService;
 import org.sunbird.cb.hubservices.util.Constants;
-import org.sunbird.hubservices.dao.IGraphDao;
+import org.sunbird.cb.hubservices.dao.IGraphDao;
 
 import java.util.*;
 
