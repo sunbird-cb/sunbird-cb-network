@@ -1,4 +1,4 @@
-package org.sunbird.hubservices.dao;
+package org.sunbird.cb.hubservices.dao;
 
 import org.sunbird.cb.hubservices.model.Node;
 import org.sunbird.cb.hubservices.util.Constants;

@@ -1,4 +1,4 @@
-package org.sunbird.hubservices.daoimpl;
+package org.sunbird.cb.hubservices.daoimpl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.neo4j.driver.v1.*;
@@ -11,7 +11,7 @@ import org.sunbird.cb.hubservices.exception.ErrorCode;
 import org.sunbird.cb.hubservices.exception.GraphException;
 import org.sunbird.cb.hubservices.model.Node;
 import org.sunbird.cb.hubservices.util.Constants;
-import org.sunbird.hubservices.dao.IGraphDao;
+import org.sunbird.cb.hubservices.dao.IGraphDao;
 
 import java.util.*;
 

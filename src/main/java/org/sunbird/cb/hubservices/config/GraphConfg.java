@@ -2,8 +2,8 @@ package org.sunbird.cb.hubservices.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.sunbird.hubservices.dao.IGraphDao;
-import org.sunbird.hubservices.daoimpl.GraphDao;
+import org.sunbird.cb.hubservices.dao.IGraphDao;
+import org.sunbird.cb.hubservices.daoimpl.GraphDao;
 
 @Configuration
 public class GraphConfg {
