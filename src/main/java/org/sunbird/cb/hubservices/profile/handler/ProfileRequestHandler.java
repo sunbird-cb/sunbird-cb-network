@@ -47,12 +47,10 @@ public class ProfileRequestHandler implements IProfileRequestHandler {
 		// search with user id
 		ResponseEntity<?> responseEntity = profileUtils.getResponseEntity(ProfileUtils.URL.SEARCH.getValue(),
 				searchRequest(uuid));
-		Object searchResult ="";
-		Object responseBody =responseEntity.getBody();
-		if(null!=responseBody) {
-			 searchResult = ((Map<String, Object>) ((Map<String, Object>) responseBody).get("result"))
+
+			Object searchResult = ((Map<String, Object>) ((Map<String, Object>) responseEntity.getBody()).get("result"))
 					.get(ProfileUtils.Profile.USER_PROFILE);
-		}
+
 		Map<String, Object> search = ((Map<String, Object>) ((List) searchResult).get(0));
 		// merge request and search to add osid(s)
 		profileUtils.merge(search, request);
@@ -75,14 +73,14 @@ public class ProfileRequestHandler implements IProfileRequestHandler {
 			logger.info("profile orginal :- {}" , mapper.convertValue(search, JsonNode.class));
 			for (Map<String, Object> request : requests) {
 
-				String osid = request.get("osid") == null ? "" : request.get("osid").toString();
+				String osid = request.get(Constants.OSID) == null ? "" : request.get(Constants.OSID).toString();
 				Map<String, Object> toChange = new HashMap<>();
 				Object sf = search.get(request.get(Constants.FIELD_KEY));
 
 				if (sf instanceof ArrayList) {
 					List<Map<String, Object>> searchFields = (ArrayList) search.get(request.get(Constants.FIELD_KEY));
 					for (Map<String, Object> obj : searchFields) {
-						if (obj.get("osid") !=null && obj.get("osid").toString().equalsIgnoreCase(osid))
+						if (obj.get(Constants.OSID) !=null && obj.get(Constants.OSID).toString().equalsIgnoreCase(osid))
 							toChange.putAll(obj);
 					}
 				}

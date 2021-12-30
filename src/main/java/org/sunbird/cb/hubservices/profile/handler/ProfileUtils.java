@@ -34,9 +34,9 @@ public class ProfileUtils {
 
     public static List<String> getUserDefaultFields() {
         List<String> userFields = new ArrayList<>();
-        userFields.add("profileDetails.professionalDetails");
-        userFields.add("profileDetails.employmentDetails");
-        userFields.add("profileDetails.personalDetails");
+        userFields.add(Constants.PROFILE_DETAILS_PROFESSIOANAL_DETAILS);
+        userFields.add(Constants.PROFILE_DETAILS_EMPLOYMENT_DETAILS);
+        userFields.add(Constants.PROFILE_DETAILS_PERSONAL_DETAILS);
         userFields.add(Constants.USER_ID);
         return userFields;
     }
@@ -217,7 +217,7 @@ public class ProfileUtils {
         StringBuilder builder = new StringBuilder();
         Map<String, Object> requestObject = new HashMap<>();
         Map<String, Object> requestWrapper = new HashMap<>();
-        requestWrapper.put("userId", uuid);
+        requestWrapper.put(Profile.USER_ID, uuid);
         requestWrapper.put(Profile.PROFILE_DETAILS, profileObj);
         requestObject.put(Profile.REQUEST, requestWrapper);
         RestTemplate restTemplate = new RestTemplate();
@@ -247,7 +247,7 @@ public class ProfileUtils {
     private Map<String, Object> getSearchObject(List<String> userIds) {
         Map<String, Object> request = new HashMap<>();
         Map<String, Object> filters = new HashMap<>();
-        filters.put("userId", userIds);
+        filters.put(Profile.USER_ID, userIds);
         request.put(Profile.FILTERS, filters);
         request.put("query", "");
         Map<String, Object> requestWrapper = new HashMap<>();
