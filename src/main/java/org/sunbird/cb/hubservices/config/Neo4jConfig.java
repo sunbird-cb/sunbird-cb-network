@@ -6,16 +6,21 @@ import org.neo4j.driver.v1.Config;
 import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.GraphDatabase;
 import org.neo4j.driver.v1.exceptions.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.sunbird.cb.hubservices.exception.GraphException;
+import org.sunbird.cb.hubservices.profile.handler.ProfileRequestHandler;
 import org.sunbird.cb.hubservices.util.GraphDbProperties;
 
 import java.util.concurrent.TimeUnit;
 
 @Configuration
 public class Neo4jConfig {
+
+	private Logger logger = LoggerFactory.getLogger(Neo4jConfig.class);
 
 	@Autowired
 	private GraphDbProperties graphDbProperties;
@@ -30,15 +35,12 @@ public class Neo4jConfig {
 			} else {
 				Config config = Config.build().withConnectionTimeout(graphDbProperties.getNeoTimeout(), TimeUnit.SECONDS)
 						.withConnectionLivenessCheckTimeout(10L, TimeUnit.SECONDS).toConfig();
-				System.out.println("Using timeout config of : " + graphDbProperties.getNeoTimeout().toString());
+				logger.info("Using timeout config of : " + graphDbProperties.getNeoTimeout().toString());
 				return GraphDatabase.driver(graphDbProperties.getNeo4jHost(), config);
 			}
 
-		}catch (AuthenticationException e){
+		}catch (AuthenticationException | ServiceUnavailableException e){
 			throw new GraphException(e.code(), e.getMessage());
-		}catch (ServiceUnavailableException e){
-			throw new GraphException(e.code(), e.getMessage());
-
 		}
 
 	}
