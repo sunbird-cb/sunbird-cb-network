@@ -1,5 +1,6 @@
 package org.sunbird.cb.hubservices.serviceimpl;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -28,7 +29,7 @@ public class ConnectionService implements IConnectionService {
 	INodeService nodeService;
 
 
-	public Response upsert(ConnectionRequest request) throws Exception {
+	public Response upsert(ConnectionRequest request) throws IOException {
 
 		Response response = new Response();
 		try {

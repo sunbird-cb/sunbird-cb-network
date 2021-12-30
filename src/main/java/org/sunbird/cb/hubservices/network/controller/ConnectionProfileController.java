@@ -38,7 +38,7 @@ public class ConnectionProfileController {
 	public ResponseEntity<Response> findSuggests(@RequestHeader String rootOrg,
 			@RequestHeader(required = false) String org, @RequestHeader String userId,
 			@RequestParam(defaultValue = "50", required = false, name = "pageSize") int pageSize,
-			@RequestParam(defaultValue = "0", required = false, name = "pageNo") int pageNo) throws IOException {
+			@RequestParam(defaultValue = "0", required = false, name = "pageNo") int pageNo)  {
 
 		Response response = profileService.findCommonProfileV2(userId, pageNo, pageSize);
 		return new ResponseEntity<>(response, HttpStatus.OK);

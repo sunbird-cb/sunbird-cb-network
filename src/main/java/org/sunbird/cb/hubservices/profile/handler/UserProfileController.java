@@ -16,12 +16,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/v1/user")
 public class UserProfileController {
 
-	/*
-	 * @Autowired RestTemplate restTemplate;
-	 * 
-	 * @Value(value = "${user.registry.ip}") String baseUrl;
-	 */
-
 	@Autowired
 	private ProfileUtils profileUtils;
 

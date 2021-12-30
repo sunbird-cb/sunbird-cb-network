@@ -1,5 +1,6 @@
 package org.sunbird.cb.hubservices.service;
 
+import java.io.IOException;
 import java.util.List;
 
 import org.sunbird.cb.hubservices.model.ConnectionRequest;
@@ -8,7 +9,7 @@ import org.sunbird.cb.hubservices.util.Constants;
 
 public interface IConnectionService {
 
-	public Response upsert(ConnectionRequest request) throws Exception;
+	public Response upsert(ConnectionRequest request) throws IOException;
 
 	/**
 	 * Send notification
