@@ -1,5 +1,6 @@
 package org.sunbird.cb.hubservices.serviceimpl;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -28,9 +29,7 @@ public class ConnectionService implements IConnectionService {
     @Autowired
     INodeService nodeService;
 
-
     public Response upsert(ConnectionRequest request) throws Exception {
-
         Response response = new Response();
         try {
 
@@ -56,7 +55,6 @@ public class ConnectionService implements IConnectionService {
             response.put(Constants.ResponseStatus.STATUS, HttpStatus.BAD_REQUEST);
         } catch (Exception e) {
             throw new ApplicationException(Constants.Message.FAILED_CONNECTION + e.getMessage());
-
         }
 
         return response;

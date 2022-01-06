@@ -1,6 +1,5 @@
 package org.sunbird.cb.hubservices.profile.handler;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -11,7 +10,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
+import org.sunbird.cb.hubservices.util.Constants;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -49,8 +48,8 @@ public class ProfileRequestHandler implements IProfileRequestHandler {
 		ResponseEntity<?> responseEntity = profileUtils.getResponseEntity(ProfileUtils.URL.SEARCH.getValue(),
 				searchRequest(uuid));
 
-		Object searchResult = ((Map<String, Object>) ((Map<String, Object>) responseEntity.getBody()).get("result"))
-				.get(ProfileUtils.Profile.USER_PROFILE);
+			Object searchResult = ((Map<String, Object>) ((Map<String, Object>) responseEntity.getBody()).get("result"))
+					.get(ProfileUtils.Profile.USER_PROFILE);
 
 		Map<String, Object> search = ((Map<String, Object>) ((List) searchResult).get(0));
 		// merge request and search to add osid(s)
@@ -66,12 +65,6 @@ public class ProfileRequestHandler implements IProfileRequestHandler {
 	@Override
 	public Map<String, Object> updateRequestWithWF(String uuid, List<Map<String, Object>> requests) {
 
-//		ResponseEntity responseEntity = profileUtils.getResponseEntity(ProfileUtils.URL.SEARCH.getValue(),
-//				searchRequest(uuid));
-//
-//		Object searchResult = ((Map<String, Object>) ((Map<String, Object>) responseEntity.getBody()).get("result"))
-//				.get(ProfileUtils.Profile.USER_PROFILE);
-
 		final ObjectMapper mapper = new ObjectMapper();
 		Map<String, Object> search = new HashMap<>();
 		// merge request and search to add osid(s)
@@ -80,24 +73,24 @@ public class ProfileRequestHandler implements IProfileRequestHandler {
 			logger.info("profile orginal :- {}" , mapper.convertValue(search, JsonNode.class));
 			for (Map<String, Object> request : requests) {
 
-				String osid = request.get("osid") == null ? "" : request.get("osid").toString();
+				String osid = request.get(Constants.OSID) == null ? "" : request.get(Constants.OSID).toString();
 				Map<String, Object> toChange = new HashMap<>();
-				Object sf = search.get(request.get("fieldKey"));
+				Object sf = search.get(request.get(Constants.FIELD_KEY));
 
 				if (sf instanceof ArrayList) {
-					List<Map<String, Object>> searchFields = (ArrayList) search.get((String) request.get("fieldKey"));
+					List<Map<String, Object>> searchFields = (ArrayList) search.get(request.get(Constants.FIELD_KEY));
 					for (Map<String, Object> obj : searchFields) {
-						if (obj.get("osid") !=null && obj.get("osid").toString().equalsIgnoreCase(osid))
+						if (obj.get(Constants.OSID) !=null && obj.get(Constants.OSID).toString().equalsIgnoreCase(osid))
 							toChange.putAll(obj);
 					}
 				}
 				if (sf instanceof HashMap) {
-					Map<String, Object> searchFields = (Map<String, Object>) search.get((String) request.get("fieldKey"));
+					Map<String, Object> searchFields = (Map<String, Object>) search.get(request.get(Constants.FIELD_KEY));
 					toChange.putAll(searchFields);
 
 				}
 
-				Map<String, Object> objectMap = (Map<String, Object>) request.get("toValue");
+				Map<String, Object> objectMap = (Map<String, Object>) request.get(Constants.FIELD_KEY);
 				for (Map.Entry entry : objectMap.entrySet())
 					toChange.put((String) entry.getKey(), entry.getValue());
 
@@ -105,7 +98,6 @@ public class ProfileRequestHandler implements IProfileRequestHandler {
 			}
 			logger.info("profile merged changes :- {}" , mapper.convertValue(search, JsonNode.class));
 		}catch (Exception e){
-		    //e.printStackTrace();
 		    logger.error("Merge profile exception::{}",e);
 		}
 		return search;
@@ -121,10 +113,11 @@ public class ProfileRequestHandler implements IProfileRequestHandler {
 		RegistryRequest registryRequest = new RegistryRequest();
 		registryRequest.setId(ProfileUtils.API.SEARCH.getValue());
 		registryRequest.getRequest().put(ProfileUtils.Profile.ENTITY_TYPE, types);
-		registryRequest.getRequest().put(ProfileUtils.Profile.FILTERs, filters);
+		registryRequest.getRequest().put(ProfileUtils.Profile.FILTERS, filters);
 		try {
 			ObjectMapper om = new ObjectMapper();
-			logger.info("GET User By ID - request -> " + om.writeValueAsString(registryRequest));
+			logger.info(String.format("GET User By ID - request -> %s",om.writeValueAsString(registryRequest)));
+
 		} catch (Exception e) {
 			logger.info("Failed to write value as String...");
 		}
@@ -139,14 +132,14 @@ public class ProfileRequestHandler implements IProfileRequestHandler {
 		RegistryRequest registryRequest = new RegistryRequest();
 		registryRequest.setId(ProfileUtils.API.SEARCH.getValue());
 		registryRequest.getRequest().put(ProfileUtils.Profile.ENTITY_TYPE, types);
-		if (null != params.get("offset") && null != params.get("limit")) {
-			registryRequest.getRequest().put("offset", params.get("offset"));
-			registryRequest.getRequest().put("limit", params.get("limit"));
+		if (null != params.get(Constants.OFFSET) && null != params.get("limit")) {
+			registryRequest.getRequest().put(Constants.OFFSET, params.get(Constants.OFFSET));
+			registryRequest.getRequest().put(Constants.LIMIT, params.get(Constants.LIMIT));
 		}
 
 		Map<String, Map<String, Object>> filters = (Map<String, Map<String, Object>>) params
-				.get(ProfileUtils.Profile.FILTERs);
-		registryRequest.getRequest().put(ProfileUtils.Profile.FILTERs, filters);
+				.get(ProfileUtils.Profile.FILTERS);
+		registryRequest.getRequest().put(ProfileUtils.Profile.FILTERS, filters);
 		return registryRequest;
 	}
 

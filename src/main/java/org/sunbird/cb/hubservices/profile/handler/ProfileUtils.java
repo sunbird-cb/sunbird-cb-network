@@ -1,7 +1,6 @@
 package org.sunbird.cb.hubservices.profile.handler;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.http.client.HttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
@@ -14,6 +13,7 @@ import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import org.sunbird.cb.hubservices.util.ConnectionProperties;
+import org.sunbird.cb.hubservices.util.Constants;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -34,14 +34,14 @@ public class ProfileUtils {
 
     public static List<String> getUserDefaultFields() {
         List<String> userFields = new ArrayList<>();
-        userFields.add("profileDetails.professionalDetails");
-        userFields.add("profileDetails.employmentDetails");
-        userFields.add("profileDetails.personalDetails");
-        userFields.add("userId");
+        userFields.add(Constants.PROFILE_DETAILS_PROFESSIOANAL_DETAILS);
+        userFields.add(Constants.PROFILE_DETAILS_EMPLOYMENT_DETAILS);
+        userFields.add(Constants.PROFILE_DETAILS_PERSONAL_DETAILS);
+        userFields.add(Constants.USER_ID);
         return userFields;
     }
 
-    public static enum API {
+    public enum API {
         CREATE("open-saber.registry.create"), READ("open-saber.registry.read"),
         SEARCH("open-saber.registry.search"), UPDATE("open-saber.registry.update");
         private String value;
@@ -52,7 +52,7 @@ public class ProfileUtils {
         }
     }
 
-    public static enum URL {
+    public enum URL {
         CREATE("/add"), READ("/read"),
         SEARCH("/search"), UPDATE("/update");
         private String value;
@@ -88,7 +88,7 @@ public class ProfileUtils {
         public static final String AT_ID = "@id";
         public static final String USER_ID = "userId";
         public static final String OSID = "osid";
-        public static final String FILTERs = "filters";
+        public static final String FILTERS = "filters";
         public static final String REQUEST = "request";
         public static final String ENTITY_TYPE = "entityType";
         public static final String PROFILE_DETAILS = "profileDetails";
@@ -137,7 +137,7 @@ public class ProfileUtils {
 
     public static ResponseEntity getResponseEntity(String baseUrl, String endPoint, RegistryRequest registryRequest){
         HttpHeaders requestHeaders = new HttpHeaders();
-        requestHeaders.add("Accept", MediaType.APPLICATION_JSON_VALUE);
+        requestHeaders.add(Constants.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
 
         HttpEntity<RegistryRequest> requestEntity = new HttpEntity<>(registryRequest, requestHeaders);
 
@@ -153,7 +153,7 @@ public class ProfileUtils {
 
     public ResponseEntity getResponseEntity(String endPoint, RegistryRequest registryRequest){
         HttpHeaders requestHeaders = new HttpHeaders();
-        requestHeaders.add("Accept", MediaType.APPLICATION_JSON_VALUE);
+        requestHeaders.add(Constants.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
 
         HttpEntity<RegistryRequest> requestEntity = new HttpEntity<>(registryRequest, requestHeaders);
 
@@ -171,7 +171,7 @@ public class ProfileUtils {
         StringBuilder builder = new StringBuilder();
         HttpHeaders requestHeaders = new HttpHeaders();
         Map<String, Object> registryRequest = getSearchObject(userIds);
-        requestHeaders.add("Accept", MediaType.APPLICATION_JSON_VALUE);
+        requestHeaders.add(Constants.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
         HttpEntity<Object> requestEntity = new HttpEntity<>(registryRequest, requestHeaders);
         builder.append(connectionProperties.getLearnerServiceHost()).append(connectionProperties.getUserSearchEndPoint());
         ResponseEntity responseEntity = restTemplate.exchange(
@@ -183,9 +183,9 @@ public class ProfileUtils {
         Map<String, Object> profileResponse = (Map<String, Object>)responseEntity.getBody();
         if (profileResponse != null && "OK".equalsIgnoreCase((String) profileResponse.get("responseCode"))) {
             Map<String, Object> map = (Map<String, Object>) profileResponse.get("result");
-            if(map.get("response") != null){
-                List<Map<String, Object>> userProfiles = (List<Map<String, Object>>)((Map<String, Object>) map.get("response")).get("content");
-                return userProfiles.stream().filter( userprofile -> userprofile.get("profileDetails") != null).map(userprofile -> (Map<String, Object>)userprofile.get("profileDetails")).collect(Collectors.toList());
+            if(map.get(Constants.RESPONSE) != null){
+                List<Map<String, Object>> userProfiles = (List<Map<String, Object>>)((Map<String, Object>) map.get(Constants.RESPONSE)).get("content");
+                return userProfiles.stream().filter( userprofile -> userprofile.get(Profile.PROFILE_DETAILS) != null).map(userprofile -> (Map<String, Object>)userprofile.get(Profile.PROFILE_DETAILS)).collect(Collectors.toList());
             }
         }
         return Collections.emptyList();
@@ -204,8 +204,8 @@ public class ProfileUtils {
         Map<String, Object> profileResponse = (Map<String, Object>)responseEntity.getBody();
         if (profileResponse != null && "OK".equalsIgnoreCase((String) profileResponse.get("responseCode"))) {
             Map<String, Object> map = (Map<String, Object>) profileResponse.get("result");
-            if(map.get("response") != null){
-                return  (Map<String, Object>)((Map<String, Object>) map.get("response")).get("profileDetails");
+            if(map.get(Constants.RESPONSE) != null){
+                return  (Map<String, Object>)((Map<String, Object>) map.get(Constants.RESPONSE)).get(Profile.PROFILE_DETAILS);
 
             }
         }
@@ -217,9 +217,9 @@ public class ProfileUtils {
         StringBuilder builder = new StringBuilder();
         Map<String, Object> requestObject = new HashMap<>();
         Map<String, Object> requestWrapper = new HashMap<>();
-        requestWrapper.put("userId", uuid);
-        requestWrapper.put("profileDetails", profileObj);
-        requestObject.put("request", requestWrapper);
+        requestWrapper.put(Profile.USER_ID, uuid);
+        requestWrapper.put(Profile.PROFILE_DETAILS, profileObj);
+        requestObject.put(Profile.REQUEST, requestWrapper);
         RestTemplate restTemplate = new RestTemplate();
 
         HttpClient httpClient = HttpClientBuilder.create().build();
@@ -240,18 +240,18 @@ public class ProfileUtils {
             ObjectMapper mapper = new ObjectMapper();
             logger.info("profile update response :: {}", mapper.writeValueAsString(responseEntity.getBody()));
         } catch (JsonProcessingException e) {
-            e.printStackTrace();
+            logger.error("error:",e);
         }
         return new ResponseEntity<>(responseEntity.getBody(), responseEntity.getStatusCode());
     }
     private Map<String, Object> getSearchObject(List<String> userIds) {
         Map<String, Object> request = new HashMap<>();
         Map<String, Object> filters = new HashMap<>();
-        filters.put("userId", userIds);
-        request.put("filters", filters);
+        filters.put(Profile.USER_ID, userIds);
+        request.put(Profile.FILTERS, filters);
         request.put("query", "");
         Map<String, Object> requestWrapper = new HashMap<>();
-        requestWrapper.put("request", request);
+        requestWrapper.put(Profile.REQUEST, request);
         return requestWrapper;
     }
 }

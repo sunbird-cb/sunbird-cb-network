@@ -23,7 +23,7 @@ public class ProducerService implements IProducerService {
 		future.addCallback(new ListenableFutureCallback<SendResult<String, Object>>() {
 			@Override
 			public void onSuccess(SendResult<String, Object> result) {
-				logger.info("Sent message: " + message + " with offset: " + result.getRecordMetadata().offset());
+				logger.info(String.format("Sent message:%s",message," %swith offset: %s",result.getRecordMetadata().offset()));
 			}
 
 			@Override

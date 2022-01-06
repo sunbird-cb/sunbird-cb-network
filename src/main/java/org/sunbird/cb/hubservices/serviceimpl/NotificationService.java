@@ -68,7 +68,6 @@ public class NotificationService implements INotificationService {
 
             notificationEvent.setMode(connectionProperties.getNotificationv2Mode());
             notificationEvent.setDeliveryType(connectionProperties.getNotificationv2DeliveryType());
-            //List<String> toList = recipients.get(connectionProperties.getNotificationTemplateReciepient());
             //replace recipient ids to email ids
             List<Map<String,Object>> profiles = profileUtils.getUserProfiles(toList);
             List<String> toListMails = new ArrayList<>();
@@ -102,7 +101,7 @@ public class NotificationService implements INotificationService {
 
 		String fromName = null;
 		try {
-			Response res = null;// profileService.findProfiles(Arrays.asList(uuid),null);
+
 			Map<String, Object> profile = profileUtils.getUserProfiles(Arrays.asList(uuid)).get(0);
 
 			if (profile!=null) {
@@ -136,14 +135,12 @@ public class NotificationService implements INotificationService {
 			RestTemplate restTemplate = new RestTemplate();
 			HttpHeaders headers = new HttpHeaders();
 			headers.set("Content-Type", "application/json");
-			logger.info("Notification event v2 value ::"+ notificationEventv2);
-
+			logger.info(String.format("Notification event v2 value :: %s",notificationEventv2));
 			Map<String, List<NotificationEvent>> notifications = new HashMap<>();
 			notifications.put("notifications", Arrays.asList(notificationEventv2));
 			Map<String, Object> nrequest = new HashMap<>();
 			nrequest.put("request", notifications);
-			logger.info("Notification event v2 request ::"+ nrequest);
-
+			logger.info(String.format("Notification event v2 value :: %s",nrequest));
 			HttpEntity request = new HttpEntity<>(nrequest, headers);
 			response = restTemplate.exchange(uri, HttpMethod.POST, request, String.class);
 
@@ -165,7 +162,8 @@ public class NotificationService implements INotificationService {
 				templateStr = templateStr.replace(entry.getKey().toString(), entry.getValue().toString());
 			}
 		}
-		logger.info("replaceWith value ::"+ templateStr);
+		logger.info(String.format("replaceWith value ::%s",templateStr));
+
 		return templateStr;
 	}
 }
