@@ -1,6 +1,5 @@
 package org.sunbird.cb.hubservices.model;
 
-
 import java.io.Serializable;
 
 public class NotificationConfig implements Serializable {
@@ -9,7 +8,6 @@ public class NotificationConfig implements Serializable {
 
 	private String sender;
 	private String subject;
-
 
 	public String getSender() {
 		return sender;

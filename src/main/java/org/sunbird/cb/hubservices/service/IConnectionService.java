@@ -20,8 +20,11 @@ public interface IConnectionService {
 	void sendNotification(String eventId, String sender, String reciepient, String status);
 
 	public List<String> findUserConnectionsV2(String userId, String status) throws Exception;
+
 	public Response findSuggestedConnectionsV2(String userId, int offset, int limit);
+
 	public Response findAllConnectionsIdsByStatusV2(String userId, String status, int offset, int limit);
+
 	public Response findConnectionsRequestedV2(String userId, int offset, int limit, Constants.DIRECTION direction);
 
 }

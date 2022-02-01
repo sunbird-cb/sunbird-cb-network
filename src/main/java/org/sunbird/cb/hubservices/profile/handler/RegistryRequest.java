@@ -1,5 +1,4 @@
 
-
 /*
  *                "Copyright 2020 Infosys Ltd.
  *                Use of this source code is governed by GPL v3 license that can be found in the LICENSE file or at https://opensource.org/licenses/GPL-3.0
@@ -9,29 +8,28 @@
 
 package org.sunbird.cb.hubservices.profile.handler;
 
-
 import java.util.HashMap;
 import java.util.Map;
 
 public class RegistryRequest {
 
-    private String id;
+	private String id;
 
-    private Map<String, Object> request = new HashMap<>();
+	private Map<String, Object> request = new HashMap<>();
 
-    public String getId() {
-        return id;
-    }
+	public String getId() {
+		return id;
+	}
 
-    public void setId(String id) {
-        this.id = id;
-    }
+	public void setId(String id) {
+		this.id = id;
+	}
 
-    public Map<String, Object> getRequest() {
-        return request;
-    }
+	public Map<String, Object> getRequest() {
+		return request;
+	}
 
-    public void setRequest(Map<String,Object> request) {
-        this.request = request;
-    }
+	public void setRequest(Map<String, Object> request) {
+		this.request = request;
+	}
 }

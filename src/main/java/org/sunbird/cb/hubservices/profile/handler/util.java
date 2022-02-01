@@ -1,16 +1,16 @@
 package org.sunbird.cb.hubservices.profile.handler;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class util {
 	private static Logger logger = LoggerFactory.getLogger(util.class);
@@ -38,7 +38,7 @@ public class util {
 			System.out.println("Merged map : " + new ObjectMapper().writeValueAsString(map1));
 
 		} catch (Exception e) {
-			logger.error("error:",e);
+			logger.error("error:", e);
 		}
 
 	}

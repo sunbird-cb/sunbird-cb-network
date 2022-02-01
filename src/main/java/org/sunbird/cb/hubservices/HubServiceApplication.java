@@ -8,9 +8,9 @@ import org.springframework.scheduling.annotation.EnableAsync;
 @EnableAsync
 public class HubServiceApplication {
 
-    public static void main(String[] args) {
-        SpringApplication.run(HubServiceApplication.class, args);
+	public static void main(String[] args) {
+		SpringApplication.run(HubServiceApplication.class, args);
 
-    }
+	}
 
 }

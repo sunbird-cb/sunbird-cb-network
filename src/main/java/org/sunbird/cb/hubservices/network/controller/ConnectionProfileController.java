@@ -1,7 +1,5 @@
 package org.sunbird.cb.hubservices.network.controller;
 
-import java.io.IOException;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -38,7 +36,7 @@ public class ConnectionProfileController {
 	public ResponseEntity<Response> findSuggests(@RequestHeader String rootOrg,
 			@RequestHeader(required = false) String org, @RequestHeader String userId,
 			@RequestParam(defaultValue = "50", required = false, name = "pageSize") int pageSize,
-			@RequestParam(defaultValue = "0", required = false, name = "pageNo") int pageNo)  {
+			@RequestParam(defaultValue = "0", required = false, name = "pageNo") int pageNo) {
 
 		Response response = profileService.findCommonProfileV2(userId, pageNo, pageSize);
 		return new ResponseEntity<>(response, HttpStatus.OK);
@@ -51,8 +49,7 @@ public class ConnectionProfileController {
 			@RequestParam(defaultValue = "50", required = false, name = "pageSize") int pageSize,
 			@RequestParam(defaultValue = "0", required = false, name = "pageNo") int pageNo) {
 
-		Response response = profileService.findProfileRequestedV2(userId, pageNo, pageSize,
-				Constants.DIRECTION.OUT);
+		Response response = profileService.findProfileRequestedV2(userId, pageNo, pageSize, Constants.DIRECTION.OUT);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 
 	}
@@ -63,8 +60,7 @@ public class ConnectionProfileController {
 			@RequestParam(defaultValue = "50", required = false, name = "pageSize") int pageSize,
 			@RequestParam(defaultValue = "0", required = false, name = "pageNo") int pageNo) {
 
-		Response response = profileService.findProfileRequestedV2(userId, pageNo, pageSize,
-				Constants.DIRECTION.IN);
+		Response response = profileService.findProfileRequestedV2(userId, pageNo, pageSize, Constants.DIRECTION.IN);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 
 	}

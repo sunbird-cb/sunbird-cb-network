@@ -170,9 +170,13 @@ public class ConnectionProperties {
 		return notificationTemplateRequest;
 	}
 
-	public String getLearnerServiceHost() {return learnerServiceHost;}
+	public String getLearnerServiceHost() {
+		return learnerServiceHost;
+	}
 
-	public String getUserSearchEndPoint() {return userSearchEndPoint;}
+	public String getUserSearchEndPoint() {
+		return userSearchEndPoint;
+	}
 
 	public String getUserUpdateEndPoint() {
 		return userUpdateEndPoint;
@@ -190,7 +194,6 @@ public class ConnectionProperties {
 		return notificationEnabled;
 	}
 
-
 	public String getUserReadEndPoint() {
 		return userReadEndPoint;
 	}
@@ -199,5 +202,3 @@ public class ConnectionProperties {
 		return maxNodeSize;
 	}
 }
-
-

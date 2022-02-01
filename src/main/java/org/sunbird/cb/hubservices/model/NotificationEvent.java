@@ -1,6 +1,5 @@
 package org.sunbird.cb.hubservices.model;
 
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -11,12 +10,11 @@ public class NotificationEvent implements Serializable {
 
 	private String mode;
 	private String deliveryType;
-	//recipients ids
+	// recipients ids
 	private List<String> ids = new ArrayList<>();
 
 	private NotificationConfig config = new NotificationConfig();
 	private NotificationTemplate template = new NotificationTemplate();
-
 
 	public String getMode() {
 		return mode;

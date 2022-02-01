@@ -1,8 +1,14 @@
 package org.sunbird.cb.hubservices.profile.handler;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import java.util.AbstractMap;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,9 +18,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.sunbird.cb.hubservices.util.Constants;
 
-import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Service
 public class ProfileRequestHandler implements IProfileRequestHandler {
@@ -48,8 +53,8 @@ public class ProfileRequestHandler implements IProfileRequestHandler {
 		ResponseEntity<?> responseEntity = profileUtils.getResponseEntity(ProfileUtils.URL.SEARCH.getValue(),
 				searchRequest(uuid));
 
-			Object searchResult = ((Map<String, Object>) ((Map<String, Object>) responseEntity.getBody()).get("result"))
-					.get(ProfileUtils.Profile.USER_PROFILE);
+		Object searchResult = ((Map<String, Object>) ((Map<String, Object>) responseEntity.getBody()).get("result"))
+				.get(ProfileUtils.Profile.USER_PROFILE);
 
 		Map<String, Object> search = ((Map<String, Object>) ((List) searchResult).get(0));
 		// merge request and search to add osid(s)
@@ -70,7 +75,7 @@ public class ProfileRequestHandler implements IProfileRequestHandler {
 		// merge request and search to add osid(s)
 		try {
 			search = profileUtils.readUserProfiles(uuid);
-			logger.info("profile orginal :- {}" , mapper.convertValue(search, JsonNode.class));
+			logger.info("profile orginal :- {}", mapper.convertValue(search, JsonNode.class));
 			for (Map<String, Object> request : requests) {
 
 				String osid = request.get(Constants.OSID) == null ? "" : request.get(Constants.OSID).toString();
@@ -80,12 +85,14 @@ public class ProfileRequestHandler implements IProfileRequestHandler {
 				if (sf instanceof ArrayList) {
 					List<Map<String, Object>> searchFields = (ArrayList) search.get(request.get(Constants.FIELD_KEY));
 					for (Map<String, Object> obj : searchFields) {
-						if (obj.get(Constants.OSID) !=null && obj.get(Constants.OSID).toString().equalsIgnoreCase(osid))
+						if (obj.get(Constants.OSID) != null
+								&& obj.get(Constants.OSID).toString().equalsIgnoreCase(osid))
 							toChange.putAll(obj);
 					}
 				}
 				if (sf instanceof HashMap) {
-					Map<String, Object> searchFields = (Map<String, Object>) search.get(request.get(Constants.FIELD_KEY));
+					Map<String, Object> searchFields = (Map<String, Object>) search
+							.get(request.get(Constants.FIELD_KEY));
 					toChange.putAll(searchFields);
 
 				}
@@ -96,9 +103,9 @@ public class ProfileRequestHandler implements IProfileRequestHandler {
 
 				profileUtils.mergeLeaf(search, toChange, request.get("fieldKey").toString(), osid);
 			}
-			logger.info("profile merged changes :- {}" , mapper.convertValue(search, JsonNode.class));
-		}catch (Exception e){
-		    logger.error("Merge profile exception::{}",e);
+			logger.info("profile merged changes :- {}", mapper.convertValue(search, JsonNode.class));
+		} catch (Exception e) {
+			logger.error("Merge profile exception::{}", e);
 		}
 		return search;
 	}
@@ -116,7 +123,7 @@ public class ProfileRequestHandler implements IProfileRequestHandler {
 		registryRequest.getRequest().put(ProfileUtils.Profile.FILTERS, filters);
 		try {
 			ObjectMapper om = new ObjectMapper();
-			logger.info(String.format("GET User By ID - request -> %s",om.writeValueAsString(registryRequest)));
+			logger.info(String.format("GET User By ID - request -> %s", om.writeValueAsString(registryRequest)));
 
 		} catch (Exception e) {
 			logger.info("Failed to write value as String...");

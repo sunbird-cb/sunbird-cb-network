@@ -12,8 +12,10 @@ public class Constants {
 	public static final String PROFILE_DETAILS_PROFESSIOANAL_DETAILS = "profileDetails.professionalDetails";
 	public static final String PROFILE_DETAILS_EMPLOYMENT_DETAILS = "profileDetails.employmentDetails";
 	public static final String PROFILE_DETAILS_PERSONAL_DETAILS = "profileDetails.personalDetails";
+
 	public enum Graph {
-		ID("id"), STATUS(ResponseStatus.STATUS), UUID("UUID"), PROPS("props"), CREATED_AT("createdAt"), UPDATED_AT("updatedAt");
+		ID("id"), STATUS(ResponseStatus.STATUS), UUID("UUID"), PROPS("props"), CREATED_AT("createdAt"),
+		UPDATED_AT("updatedAt");
 
 		private String value;
 

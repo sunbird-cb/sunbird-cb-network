@@ -1,9 +1,18 @@
 package org.sunbird.cb.hubservices.model;
 
-import javax.validation.constraints.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.PositiveOrZero;
+import javax.validation.constraints.Size;
 
 public class MultiSearch {
+
+	@Override
+	public String toString() {
+		return "MultiSearch [size=" + size + ", offset=" + offset + ", search=" + search + "]";
+	}
 
 	@PositiveOrZero
 	private int size = 10;
