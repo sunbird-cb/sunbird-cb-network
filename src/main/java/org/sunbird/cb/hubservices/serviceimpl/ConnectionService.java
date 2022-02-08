@@ -36,7 +36,7 @@ public class ConnectionService implements IConnectionService {
 	public Response upsert(ConnectionRequest request) {
 		Response response = new Response();
 		try {
-			if (!request.getUserIdFrom().equals(request.getUserIdTo())) {
+			if (validateRequest(request)) {
 				Node from = new Node(request.getUserIdFrom());
 				Node to = new Node(request.getUserIdTo());
 				Map<String, String> relP = new HashMap<>();
@@ -55,7 +55,7 @@ public class ConnectionService implements IConnectionService {
 				response.put(Constants.ResponseStatus.MESSAGE, Constants.ResponseStatus.SUCCESSFUL);
 				response.put(Constants.ResponseStatus.STATUS, HttpStatus.CREATED);
 			} else {
-				response.put(Constants.ResponseStatus.MESSAGE, "User cannot send a connection request to himself");
+				response.put(Constants.ResponseStatus.MESSAGE, Constants.ResponseStatus.FAILED);
 			}
 		} catch (ValidationException ve) {
 			response.put(Constants.ResponseStatus.STATUS, HttpStatus.BAD_REQUEST);
@@ -64,6 +64,11 @@ public class ConnectionService implements IConnectionService {
 		}
 
 		return response;
+	}
+
+	private boolean validateRequest(ConnectionRequest request) {
+		return (!request.getUserIdFrom().isEmpty() && !request.getUserIdTo().isEmpty())
+				&& !request.getUserIdFrom().equals(request.getUserIdTo());
 	}
 
 	@Override

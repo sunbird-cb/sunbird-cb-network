@@ -54,24 +54,17 @@ public class GraphDao implements IGraphDao {
 
 				Statement statement = new Statement(queryNodeExist.toString(), parameters);
 				StatementResult result = transaction.run(statement);
-				int recordSize = result.list().size();
 				result.consume();
-				if (recordSize != 0) {
+				if (!result.list().isEmpty()) {
 					logger.info("Nodes exists, new node cannot be created! ", node.getId());
 				} else {
-					Map<String, Object> props = new HashMap<>();
-					props = new ObjectMapper().convertValue(node, Map.class);
-
 					Map<String, Object> params = new HashMap<>();
-					params.put(Constants.Graph.PROPS.getValue(), props);
-
+					params.put(Constants.Graph.PROPS.getValue(), new ObjectMapper().convertValue(node, Map.class));
 					StringBuilder queryBuilder = new StringBuilder();
 					queryBuilder.append("CREATE (n:").append(label).append(") SET n = $props RETURN n");
-
-					Statement statement1 = new Statement(queryBuilder.toString(), params);
-
-					StatementResult result1 = transaction.run(statement1);
-					result1.consume();
+					statement = new Statement(queryBuilder.toString(), params);
+					result = transaction.run(statement);
+					result.consume();
 					transaction.commitAsync();
 					logger.info("user node with id {} created successfully ", node.getId());
 				}
