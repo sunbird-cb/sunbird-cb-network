@@ -8,8 +8,8 @@ import org.sunbird.hubservices.daoimpl.GraphDao;
 @Configuration
 public class GraphConfg {
 
-    @Bean
-    public IGraphDao userGraphDao() {
-        return new GraphDao("userV2");
-    }
+	@Bean
+	public IGraphDao userGraphDao() {
+		return new GraphDao("userV2");
+	}
 }

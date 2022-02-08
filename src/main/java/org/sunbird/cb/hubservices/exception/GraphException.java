@@ -7,8 +7,8 @@ public class GraphException extends RuntimeException {
 	public String getErrCode() {
 		return errCode;
 	}
-	private final String errCode;
 
+	private final String errCode;
 
 	public GraphException(String errCode) {
 		super();

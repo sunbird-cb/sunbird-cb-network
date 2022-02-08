@@ -1,7 +1,9 @@
 package org.sunbird.cb.hubservices.serviceimpl;
 
-import java.io.IOException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,7 +12,10 @@ import org.springframework.stereotype.Service;
 import org.sunbird.cb.hubservices.exception.ApplicationException;
 import org.sunbird.cb.hubservices.exception.BadRequestException;
 import org.sunbird.cb.hubservices.exception.ValidationException;
-import org.sunbird.cb.hubservices.model.*;
+import org.sunbird.cb.hubservices.model.ConnectionRequest;
+import org.sunbird.cb.hubservices.model.Node;
+import org.sunbird.cb.hubservices.model.NotificationEvent;
+import org.sunbird.cb.hubservices.model.Response;
 import org.sunbird.cb.hubservices.service.IConnectionService;
 import org.sunbird.cb.hubservices.service.INodeService;
 import org.sunbird.cb.hubservices.util.ConnectionProperties;
@@ -19,139 +24,149 @@ import org.sunbird.cb.hubservices.util.Constants;
 @Service
 public class ConnectionService implements IConnectionService {
 
-    @Autowired
-    private NotificationService notificationService;
+	@Autowired
+	private NotificationService notificationService;
 
-    @Autowired
-    private ConnectionProperties connectionProperties;
+	@Autowired
+	private ConnectionProperties connectionProperties;
 
+	@Autowired
+	INodeService nodeService;
 
-    @Autowired
-    INodeService nodeService;
+	public Response upsert(ConnectionRequest request) {
+		Response response = new Response();
+		try {
+			if (validateRequest(request)) {
+				Node from = new Node(request.getUserIdFrom());
+				Node to = new Node(request.getUserIdTo());
+				Map<String, String> relP = new HashMap<>();
+				relP.put(Constants.Graph.STATUS.getValue(), request.getStatus());
+				if (request.getCreatedAt() != null)
+					relP.put(Constants.Graph.CREATED_AT.getValue(), request.getCreatedAt());
+				if (request.getUpdatedAt() != null)
+					relP.put(Constants.Graph.UPDATED_AT.getValue(), request.getUpdatedAt());
 
-    public Response upsert(ConnectionRequest request) throws Exception {
-        Response response = new Response();
-        try {
+				nodeService.connect(from, to, relP);
 
-            Node from = new Node(request.getUserIdFrom());
-            Node to = new Node(request.getUserIdTo());
-            Map<String, String> relP = new HashMap<>();
-            relP.put(Constants.Graph.STATUS.getValue(), request.getStatus());
-            if (request.getCreatedAt() != null)
-                relP.put(Constants.Graph.CREATED_AT.getValue(), request.getCreatedAt());
-            if (request.getUpdatedAt() != null)
-                relP.put(Constants.Graph.UPDATED_AT.getValue(), request.getUpdatedAt());
+				if (connectionProperties.isNotificationEnabled())
+					sendNotification(connectionProperties.getNotificationTemplateRequest(), request.getUserIdFrom(),
+							request.getUserIdTo(), request.getStatus());
 
-            nodeService.connect(from, to, relP);
+				response.put(Constants.ResponseStatus.MESSAGE, Constants.ResponseStatus.SUCCESSFUL);
+				response.put(Constants.ResponseStatus.STATUS, HttpStatus.CREATED);
+			} else {
+				response.put(Constants.ResponseStatus.MESSAGE, Constants.ResponseStatus.FAILED);
+			}
+		} catch (ValidationException ve) {
+			response.put(Constants.ResponseStatus.STATUS, HttpStatus.BAD_REQUEST);
+		} catch (Exception e) {
+			throw new ApplicationException(Constants.Message.FAILED_CONNECTION + e.getMessage());
+		}
 
-            if (connectionProperties.isNotificationEnabled())
-                sendNotification(connectionProperties.getNotificationTemplateRequest(), request.getUserIdFrom(),
-                        request.getUserIdTo(), request.getStatus());
+		return response;
+	}
 
-            response.put(Constants.ResponseStatus.MESSAGE, Constants.ResponseStatus.SUCCESSFUL);
-            response.put(Constants.ResponseStatus.STATUS, HttpStatus.CREATED);
+	private boolean validateRequest(ConnectionRequest request) {
+		return (!request.getUserIdFrom().isEmpty() && !request.getUserIdTo().isEmpty())
+				&& !request.getUserIdFrom().equals(request.getUserIdTo());
+	}
 
-        } catch (ValidationException ve) {
-            response.put(Constants.ResponseStatus.STATUS, HttpStatus.BAD_REQUEST);
-        } catch (Exception e) {
-            throw new ApplicationException(Constants.Message.FAILED_CONNECTION + e.getMessage());
-        }
+	@Override
+	public void sendNotification(String eventId, String sender, String reciepient, String status) {
+		NotificationEvent event = notificationService.buildEvent(eventId, sender, reciepient, status);
+		notificationService.postEvent(event);
+	}
 
-        return response;
-    }
+	@Override
+	public List<String> findUserConnectionsV2(String userId, String status) throws Exception {
 
-    @Override
-    public void sendNotification(String eventId, String sender, String reciepient, String status) {
-        NotificationEvent event = notificationService.buildEvent(eventId, sender, reciepient, status);
-        notificationService.postEvent(event);
-    }
+		Map<String, String> relationProperties = new HashMap<>();
+		relationProperties.put(Constants.Graph.STATUS.getValue(), status);
+		return nodeService
+				.getNodes(userId, relationProperties, null, 0, connectionProperties.getMaxNodeSize(),
+						Arrays.asList(Constants.Graph.ID.getValue()))
+				.stream().map(Node::getId).collect(Collectors.toList());
 
-    @Override
-    public List<String> findUserConnectionsV2(String userId, String status) throws Exception {
+	}
 
-        Map<String, String> relationProperties = new HashMap<>();
-        relationProperties.put(Constants.Graph.STATUS.getValue(), status);
-        return nodeService.getNodes(userId, relationProperties, null, 0, connectionProperties.getMaxNodeSize(), Arrays.asList(Constants.Graph.ID.getValue())).stream().map(node -> node.getId()).collect(Collectors.toList());
+	@Override
+	public Response findSuggestedConnectionsV2(String userId, int offset, int limit) {
 
-    }
+		Response response = new Response();
+		try {
+			if (userId == null || userId.isEmpty()) {
+				throw new BadRequestException(Constants.Message.USER_ID_INVALID);
+			}
+			Map<String, String> relationProperties = new HashMap<>();
+			relationProperties.put(Constants.Graph.STATUS.getValue(), Constants.Status.APPROVED);
+			List<Node> nodes = nodeService.getNodeNextLevel(userId, relationProperties, offset, limit);
 
-    @Override
-    public Response findSuggestedConnectionsV2(String userId, int offset, int limit) {
+			List<String> allNodesIds = findUserConnectionsV2(userId, Constants.Status.APPROVED);
+			List<Node> detachedNodes = nodes.stream().filter(node -> !allNodesIds.contains(node.getId()))
+					.collect(Collectors.toList());
 
-        Response response = new Response();
-        try {
-            if (userId == null || userId.isEmpty()) {
-                throw new BadRequestException(Constants.Message.USER_ID_INVALID);
-            }
-            Map<String, String> relationProperties = new HashMap<>();
-            relationProperties.put(Constants.Graph.STATUS.getValue(), Constants.Status.APPROVED);
-            List<Node> nodes = nodeService.getNodeNextLevel(userId, relationProperties, offset, limit);
+			response.put(Constants.ResponseStatus.MESSAGE, Constants.ResponseStatus.SUCCESSFUL);
+			response.put(Constants.ResponseStatus.DATA, detachedNodes);
+			response.put(Constants.ResponseStatus.STATUS, HttpStatus.OK);
 
-            List<String> allNodesIds = findUserConnectionsV2(userId, Constants.Status.APPROVED);
-            List<Node> detachedNodes = nodes.stream().filter(node -> !allNodesIds.contains(node.getId()))
-                    .collect(Collectors.toList());
+		} catch (Exception e) {
+			throw new ApplicationException(Constants.Message.FAILED_CONNECTION + e.getMessage());
 
-            response.put(Constants.ResponseStatus.MESSAGE, Constants.ResponseStatus.SUCCESSFUL);
-            response.put(Constants.ResponseStatus.DATA, detachedNodes);
-            response.put(Constants.ResponseStatus.STATUS, HttpStatus.OK);
+		}
 
-        } catch (Exception e) {
-            throw new ApplicationException(Constants.Message.FAILED_CONNECTION + e.getMessage());
+		return response;
+	}
 
-        }
+	@Override
+	public Response findAllConnectionsIdsByStatusV2(String userId, String status, int offset, int limit) {
+		Response response = new Response();
 
-        return response;
-    }
+		try {
+			if (userId == null || userId.isEmpty()) {
+				throw new BadRequestException(Constants.Message.USER_ID_INVALID);
+			}
+			Map<String, String> relationProperties = new HashMap<>();
+			relationProperties.put(Constants.Graph.STATUS.getValue(), status);
+			List<Node> nodes = nodeService.getNodes(userId, relationProperties, null, offset, limit,
+					Arrays.asList(Constants.Graph.ID.getValue()));
+			int count = nodeService.getNodesCount(userId, relationProperties, null);
 
-    @Override
-    public Response findAllConnectionsIdsByStatusV2(String userId, String status, int offset, int limit) {
-        Response response = new Response();
+			response.put(Constants.ResponseStatus.PAGENO, offset);
+			response.put(Constants.ResponseStatus.TOTALHIT, count);
 
-        try {
-            if (userId == null || userId.isEmpty()) {
-                throw new BadRequestException(Constants.Message.USER_ID_INVALID);
-            }
-            Map<String, String> relationProperties = new HashMap<>();
-            relationProperties.put(Constants.Graph.STATUS.getValue(), status);
-            List<Node> nodes = nodeService.getNodes(userId, relationProperties, null, offset, limit, Arrays.asList(Constants.Graph.ID.getValue()));
-            int count = nodeService.getNodesCount(userId, relationProperties, null);
+			response.put(Constants.ResponseStatus.MESSAGE, Constants.ResponseStatus.SUCCESSFUL);
+			response.put(Constants.ResponseStatus.DATA, nodes);
+			response.put(Constants.ResponseStatus.STATUS, HttpStatus.OK);
 
-            response.put(Constants.ResponseStatus.PAGENO, offset);
-            response.put(Constants.ResponseStatus.TOTALHIT, count);
+		} catch (Exception e) {
+			throw new ApplicationException(Constants.Message.FAILED_CONNECTION + e.getMessage());
+		}
 
-            response.put(Constants.ResponseStatus.MESSAGE, Constants.ResponseStatus.SUCCESSFUL);
-            response.put(Constants.ResponseStatus.DATA, nodes);
-            response.put(Constants.ResponseStatus.STATUS, HttpStatus.OK);
+		return response;
+	}
 
-        } catch (Exception e) {
-            throw new ApplicationException(Constants.Message.FAILED_CONNECTION + e.getMessage());
-        }
+	@Override
+	public Response findConnectionsRequestedV2(String userId, int offset, int limit, Constants.DIRECTION direction) {
+		Response response = new Response();
 
-        return response;
-    }
+		try {
+			if (userId == null || userId.isEmpty()) {
+				throw new BadRequestException(Constants.Message.USER_ID_INVALID);
+			}
+			Map<String, String> relationProperties = new HashMap<>();
+			relationProperties.put(Constants.Graph.STATUS.getValue(), Constants.Status.PENDING);
 
-    @Override
-    public Response findConnectionsRequestedV2(String userId, int offset, int limit, Constants.DIRECTION direction) {
-        Response response = new Response();
+			List<Node> nodes = nodeService.getNodes(userId, relationProperties, direction, offset, limit, null);
 
-        try {
-            if (userId == null || userId.isEmpty()) {
-                throw new BadRequestException(Constants.Message.USER_ID_INVALID);
-            }
-            Map<String, String> relationProperties = new HashMap<>();
-            relationProperties.put(Constants.Graph.STATUS.getValue(), Constants.Status.PENDING);
+			response.put(Constants.ResponseStatus.MESSAGE, Constants.ResponseStatus.SUCCESSFUL);
+			response.put(Constants.ResponseStatus.DATA, nodes);
+			response.put(Constants.ResponseStatus.STATUS, HttpStatus.OK);
 
-            List<Node> nodes = nodeService.getNodes(userId, relationProperties, direction, offset, limit, null);
+		} catch (Exception e) {
+			throw new ApplicationException(Constants.Message.FAILED_CONNECTION + e.getMessage());
+		}
 
-            response.put(Constants.ResponseStatus.MESSAGE, Constants.ResponseStatus.SUCCESSFUL);
-            response.put(Constants.ResponseStatus.DATA, nodes);
-            response.put(Constants.ResponseStatus.STATUS, HttpStatus.OK);
-
-        } catch (Exception e) {
-            throw new ApplicationException(Constants.Message.FAILED_CONNECTION + e.getMessage());
-        }
-
-        return response;
-    }
+		return response;
+	}
 
 }

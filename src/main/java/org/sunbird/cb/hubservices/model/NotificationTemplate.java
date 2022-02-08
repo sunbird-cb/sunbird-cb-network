@@ -1,6 +1,5 @@
 package org.sunbird.cb.hubservices.model;
 
-
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
