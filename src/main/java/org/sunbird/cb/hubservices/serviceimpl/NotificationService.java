@@ -3,8 +3,10 @@ package org.sunbird.cb.hubservices.serviceimpl;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,9 +38,6 @@ public class NotificationService implements INotificationService {
 
 	@Autowired
 	ConnectionProperties connectionProperties;
-
-	@Autowired
-	private ProfileService profileService;
 
 	@Autowired
 	private ProfileUtils profileUtils;
@@ -127,7 +126,6 @@ public class NotificationService implements INotificationService {
 
 	@Override
 	public ResponseEntity postEvent(NotificationEvent notificationEventv2) {
-
 		ResponseEntity<?> response = null;
 		try {
 			final String uri = connectionProperties.getNotificationIp()
@@ -141,7 +139,7 @@ public class NotificationService implements INotificationService {
 			Map<String, Object> nrequest = new HashMap<>();
 			nrequest.put("request", notifications);
 			logger.info(String.format("Notification event v2 value :: %s", nrequest));
-			HttpEntity request = new HttpEntity<>(nrequest, headers);
+			HttpEntity<Map<String, Object>> request = new HttpEntity<>(nrequest, headers);
 			response = restTemplate.exchange(uri, HttpMethod.POST, request, String.class);
 
 			logger.info(Constants.Message.SENT_NOTIFICATION_SUCCESS, response.getStatusCode());
@@ -156,7 +154,8 @@ public class NotificationService implements INotificationService {
 	}
 
 	private String replaceWith(String templateStr, Map<String, Object> tagValues) {
-		for (Map.Entry entry : tagValues.entrySet()) {
+		for (Iterator<Entry<String, Object>> iterator = tagValues.entrySet().iterator(); iterator.hasNext();) {
+			Entry<String, Object> entry = iterator.next();
 			if (templateStr.contains(entry.getKey().toString())) {
 				templateStr = templateStr.replace(entry.getKey().toString(), entry.getValue().toString());
 			}
