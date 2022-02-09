@@ -1,3 +1,4 @@
+
 package org.sunbird.cb.hubservices.profile.handler;
 
 import java.util.ArrayList;
@@ -12,7 +13,6 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -21,6 +21,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
+import org.sunbird.cb.hubservices.model.RegistryRequest;
 import org.sunbird.cb.hubservices.util.ConnectionProperties;
 import org.sunbird.cb.hubservices.util.Constants;
 
@@ -34,9 +35,6 @@ public class ProfileUtils {
 
 	private Logger logger = LoggerFactory.getLogger(ProfileUtils.class);
 
-	@Value(value = "${user.registry.ip}")
-	String baseUrl;
-
 	@Autowired
 	private ConnectionProperties connectionProperties;
 
@@ -47,21 +45,6 @@ public class ProfileUtils {
 		userFields.add(Constants.PROFILE_DETAILS_PERSONAL_DETAILS);
 		userFields.add(Constants.USER_ID);
 		return userFields;
-	}
-
-	public enum API {
-		CREATE("open-saber.registry.create"), READ("open-saber.registry.read"), SEARCH("open-saber.registry.search"),
-		UPDATE("open-saber.registry.update");
-
-		private String value;
-
-		private API(String value) {
-			this.value = value;
-		}
-
-		public String getValue() {
-			return this.value;
-		}
 	}
 
 	public enum URL {
@@ -156,18 +139,6 @@ public class ProfileUtils {
 		HttpHeaders requestHeaders = new HttpHeaders();
 		requestHeaders.add(Constants.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
 		HttpEntity<RegistryRequest> requestEntity = new HttpEntity<>(registryRequest, requestHeaders);
-		ResponseEntity responseEntity = restTemplate.exchange(baseUrl + endPoint, HttpMethod.POST, requestEntity,
-				Map.class);
-
-		return new ResponseEntity<>(responseEntity.getBody(), responseEntity.getStatusCode());
-	}
-
-	public ResponseEntity getResponseEntity(String endPoint, RegistryRequest registryRequest) {
-		HttpHeaders requestHeaders = new HttpHeaders();
-		requestHeaders.add(Constants.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
-
-		HttpEntity<RegistryRequest> requestEntity = new HttpEntity<>(registryRequest, requestHeaders);
-
 		ResponseEntity responseEntity = restTemplate.exchange(baseUrl + endPoint, HttpMethod.POST, requestEntity,
 				Map.class);
 
