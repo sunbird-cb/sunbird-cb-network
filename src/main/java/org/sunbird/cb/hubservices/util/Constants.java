@@ -2,6 +2,7 @@ package org.sunbird.cb.hubservices.util;
 
 public class Constants {
 
+	public static final String TO_VALUE = "toValue";
 	public static final String FIELD_KEY = "fieldKey";
 	public static final String OFFSET = "offset";
 	public static final String LIMIT = "limit";

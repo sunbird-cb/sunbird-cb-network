@@ -97,7 +97,7 @@ public class ProfileRequestHandler implements IProfileRequestHandler {
 
 				}
 
-				Map<String, Object> objectMap = (Map<String, Object>) request.get(Constants.FIELD_KEY);
+				Map<String, Object> objectMap = (Map<String, Object>) request.get(Constants.TO_VALUE);
 				for (Map.Entry entry : objectMap.entrySet())
 					toChange.put((String) entry.getKey(), entry.getValue());
 

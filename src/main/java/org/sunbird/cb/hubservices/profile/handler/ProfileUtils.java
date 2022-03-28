@@ -1,10 +1,6 @@
 package org.sunbird.cb.hubservices.profile.handler;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import org.apache.http.client.HttpClient;
@@ -137,12 +133,13 @@ public class ProfileUtils {
 
 		for (String key : mapLeft.keySet()) {
 
-			if (key.equalsIgnoreCase(leafKey) && (mapLeft.get(key) instanceof ArrayList) && !id.isEmpty()) {
-
-				((ArrayList) mapLeft.get(key)).removeIf(
-						o -> ((Map) o).get("osid") != null && ((Map) o).get("osid").toString().equalsIgnoreCase(id));
-				((ArrayList) mapLeft.get(key)).add(mapRight);
-
+			if (mapLeft.get(key) instanceof ArrayList) {
+				Set<String> childRequest =  mapRight.keySet();
+				for (String keys : childRequest) {
+					List<Map<String, Object>> childExisting = (List<Map<String, Object>>) mapLeft.get(key);
+					Map<String, Object> childExistingIndex = (Map<String, Object>) childExisting.get(0);
+					childExistingIndex.put(keys, mapRight.get(keys));
+				}
 			}
 			if (key.equalsIgnoreCase(leafKey) && (mapLeft.get(key) instanceof HashMap)) {
 				mapLeft.put(key, mapRight);
