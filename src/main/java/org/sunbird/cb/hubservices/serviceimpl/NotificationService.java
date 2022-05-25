@@ -1,5 +1,6 @@
 package org.sunbird.cb.hubservices.serviceimpl;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -15,16 +16,16 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import org.sunbird.cb.hubservices.exception.ApplicationException;
+import org.sunbird.cb.hubservices.model.NotificationConfig;
 import org.sunbird.cb.hubservices.model.NotificationEvent;
-import org.sunbird.cb.hubservices.model.Response;
+import org.sunbird.cb.hubservices.model.NotificationTemplate;
+import org.sunbird.cb.hubservices.profile.handler.ProfileUtils;
 import org.sunbird.cb.hubservices.service.INotificationService;
 import org.sunbird.cb.hubservices.util.ConnectionProperties;
 import org.sunbird.cb.hubservices.util.Constants;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 
 @Service
 public class NotificationService implements INotificationService {
@@ -38,6 +39,9 @@ public class NotificationService implements INotificationService {
 
 	@Autowired
 	private ProfileService profileService;
+
+	@Autowired
+	private ProfileUtils profileUtils;
 
 	@Override
 	public NotificationEvent buildEvent(String eventId, String sender, String reciepient, String status) {
@@ -61,9 +65,32 @@ public class NotificationService implements INotificationService {
 					connectionProperties.getNotificationTemplateTargetUrlValue());
 			tagValues.put(connectionProperties.getNotificationTemplateStatus(), status);
 
-			notificationEvent.setEventId(eventId);
-			notificationEvent.setRecipients(recipients);
-			notificationEvent.setTagValues(tagValues);
+			notificationEvent.setMode(connectionProperties.getNotificationv2Mode());
+			notificationEvent.setDeliveryType(connectionProperties.getNotificationv2DeliveryType());
+			// replace recipient ids to email ids
+			List<Map<String, Object>> profiles = profileUtils.getUserProfiles(toList);
+			List<String> toListMails = new ArrayList<>();
+			profiles.forEach(profile -> {
+				toListMails.add(((Map<String, Object>) profile.get(Constants.Profile.PERSONAL_DETAILS))
+						.get("primaryEmail").toString());
+			});
+			notificationEvent.setIds(toListMails);
+
+			NotificationConfig configV2 = new NotificationConfig();
+			configV2.setSender(connectionProperties.getNotificationv2Sender());
+			configV2.setSubject(eventId);
+			notificationEvent.setConfig(configV2);
+
+			NotificationTemplate templateV2 = new NotificationTemplate();
+			templateV2.setId(connectionProperties.getNotificationv2Id());
+			Map<String, String> params = new HashMap<>();
+			if (eventId.equals(connectionProperties.getNotificationTemplateRequest()))
+				params.put("body", replaceWith(connectionProperties.getNotificationv2RequestBody(), tagValues));
+			else if (eventId.equals(connectionProperties.getNotificationTemplateResponse()))
+				params.put("body", replaceWith(connectionProperties.getNotificationv2ResponseBody(), tagValues));
+
+			templateV2.setParams(params);
+			notificationEvent.setTemplate(templateV2);
 
 		}
 		return notificationEvent;
@@ -74,14 +101,15 @@ public class NotificationService implements INotificationService {
 
 		String fromName = null;
 		try {
-			Response res = null;// profileService.findProfiles(Arrays.asList(uuid),null);
-			Map<String, Object> profiles = res.getResult();
-			if (profiles.size() > 0) {
 
-				ArrayNode dataNodes = mapper.convertValue(profiles.get(Constants.ResponseStatus.DATA), ArrayNode.class);
-				logger.info("dataNodes :-{}", dataNodes);
+			Map<String, Object> profile = profileUtils.getUserProfiles(Arrays.asList(uuid)).get(0);
 
-				JsonNode profilePersonalDetails = dataNodes.get(0).get(Constants.Profile.PERSONAL_DETAILS);
+			if (profile != null) {
+
+				JsonNode dataNode = mapper.convertValue(profile, JsonNode.class);
+				logger.info("profile dataNode :-{}", dataNode);
+
+				JsonNode profilePersonalDetails = dataNode.get(Constants.Profile.PERSONAL_DETAILS);
 				fromName = profilePersonalDetails.get(Constants.Profile.FIRST_NAME).asText().concat(" ")
 						.concat(profilePersonalDetails.get(Constants.Profile.SUR_NAME).asText());
 
@@ -98,10 +126,7 @@ public class NotificationService implements INotificationService {
 	}
 
 	@Override
-	public ResponseEntity postEvent(String rootOrg, NotificationEvent notificationEvent) {
-		if (rootOrg == null || rootOrg.isEmpty()) {
-			throw new ApplicationException(Constants.Message.ROOT_ORG_INVALID);
-		}
+	public ResponseEntity postEvent(NotificationEvent notificationEventv2) {
 
 		ResponseEntity<?> response = null;
 		try {
@@ -109,18 +134,35 @@ public class NotificationService implements INotificationService {
 					.concat(connectionProperties.getNotificationEventEndpoint());
 			RestTemplate restTemplate = new RestTemplate();
 			HttpHeaders headers = new HttpHeaders();
-			headers.set(Constants.Parmeters.ROOT_ORG, rootOrg);
-			HttpEntity request = new HttpEntity<>(notificationEvent, headers);
+			headers.set("Content-Type", "application/json");
+			logger.info(String.format("Notification event v2 value :: %s", notificationEventv2));
+			Map<String, List<NotificationEvent>> notifications = new HashMap<>();
+			notifications.put("notifications", Arrays.asList(notificationEventv2));
+			Map<String, Object> nrequest = new HashMap<>();
+			nrequest.put("request", notifications);
+			logger.info(String.format("Notification event v2 value :: %s", nrequest));
+			HttpEntity request = new HttpEntity<>(nrequest, headers);
 			response = restTemplate.exchange(uri, HttpMethod.POST, request, String.class);
 
 			logger.info(Constants.Message.SENT_NOTIFICATION_SUCCESS, response.getStatusCode());
 
 		} catch (Exception e) {
-			logger.error(Constants.Message.SENT_NOTIFICATION_ERROR, e.getMessage());
+			logger.error(Constants.Message.SENT_NOTIFICATION_ERROR + ":{}", e);
 			return new ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR);
 
 		}
 		return response;
 
+	}
+
+	private String replaceWith(String templateStr, Map<String, Object> tagValues) {
+		for (Map.Entry entry : tagValues.entrySet()) {
+			if (templateStr.contains(entry.getKey().toString())) {
+				templateStr = templateStr.replace(entry.getKey().toString(), entry.getValue().toString());
+			}
+		}
+		logger.info(String.format("replaceWith value ::%s", templateStr));
+
+		return templateStr;
 	}
 }

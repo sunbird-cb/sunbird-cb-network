@@ -13,12 +13,6 @@ public interface INotificationService {
 	 */
 	NotificationEvent buildEvent(String eventId, String sender, String reciepient, String status);
 
-	/**
-	 * Sends notifications
-	 *
-	 * @param notificationEvent
-	 * @return
-	 */
-	ResponseEntity postEvent(String rootOrg, NotificationEvent notificationEvent);
+	ResponseEntity postEvent(NotificationEvent notificationEventV2);
 
 }

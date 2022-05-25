@@ -1,6 +1,8 @@
 package org.sunbird.cb.hubservices.profile.handler;
 
-import com.fasterxml.jackson.databind.ser.std.StringSerializer;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -10,8 +12,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
 import org.springframework.kafka.support.serializer.JsonSerializer;
 
-import java.util.HashMap;
-import java.util.Map;
+import com.fasterxml.jackson.databind.ser.std.StringSerializer;
 
 @Configuration
 public class ProducerConfiguration {

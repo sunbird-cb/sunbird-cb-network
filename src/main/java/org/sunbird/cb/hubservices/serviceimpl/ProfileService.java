@@ -1,160 +1,144 @@
 package org.sunbird.cb.hubservices.serviceimpl;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Stream;
 
-import org.elasticsearch.action.search.MultiSearchRequest;
-import org.elasticsearch.action.search.MultiSearchResponse;
-import org.elasticsearch.action.search.SearchRequest;
-import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.search.SearchHit;
-import org.elasticsearch.search.builder.SearchSourceBuilder;
-import org.elasticsearch.search.sort.SortOrder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.sunbird.cb.hubservices.exception.ApplicationException;
 import org.sunbird.cb.hubservices.model.MultiSearch;
 import org.sunbird.cb.hubservices.model.Response;
 import org.sunbird.cb.hubservices.model.Search;
+import org.sunbird.cb.hubservices.profile.handler.ProfileUtils;
+import org.sunbird.cb.hubservices.profile.handler.RegistryRequest;
+import org.sunbird.cb.hubservices.service.IConnectionService;
 import org.sunbird.cb.hubservices.service.IProfileService;
 import org.sunbird.cb.hubservices.util.ConnectionProperties;
 import org.sunbird.cb.hubservices.util.Constants;
+import org.sunbird.cb.hubservices.util.PrettyPrintingMap;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 @Service
 public class ProfileService implements IProfileService {
 
-    private Logger logger = LoggerFactory.getLogger(ProfileService.class);
+	private Logger logger = LoggerFactory.getLogger(ProfileService.class);
 
-    @Autowired
-    private RestHighLevelClient restHighLevelClient;
+	@Autowired
+	ConnectionProperties connectionProperties;
 
-    @Autowired
-    ConnectionProperties connectionProperties;
+	@Autowired
+	IConnectionService connectionService;
 
-    @Autowired
-    ConnectionService connectionService;
+	@Autowired
+	ObjectMapper mapper;
 
-    @Autowired
-    ObjectMapper mapper;
+	@Override
+	public Response findCommonProfileV2(String userId, int offset, int limit) {
+		return connectionService.findSuggestedConnectionsV2(userId, offset, limit);
+	}
 
+	@Override
+	public Response findProfilesV2(String userId, int offset, int limit) {
+		return connectionService.findAllConnectionsIdsByStatusV2(userId, Constants.Status.APPROVED, offset, limit);
 
+	}
 
-    @Override
-    public Response findCommonProfile(String rootOrg, String userId, int offset, int limit) {
+	@Override
+	public Response findProfileRequestedV2(String userId, int offset, int limit, Constants.DIRECTION direction) {
+		return connectionService.findConnectionsRequestedV2(userId, offset, limit, direction);
 
-        Response responseConnections = connectionService.findSuggestedConnections(rootOrg, userId, offset, limit);
-       return responseConnections;
+	}
 
+	@Override
+	public Response multiSearchProfiles(String userId, MultiSearch mSearchRequest, String[] sourceFields) {
 
-    }
+		Response response = new Response();
+		try {
+			List<String> connectionIdsToExclude = connectionService.findUserConnectionsV2(userId,
+					Constants.Status.APPROVED);
+			connectionIdsToExclude.add(userId);
+			logger.info("multi search request :: {}", mSearchRequest.toString());
 
-    @Override
-    public Response findProfiles(String rootOrg, String userId, int offset, int limit) {
+			List<String> tags = new ArrayList<>();
+			Map<String, Object> tagRes = new HashMap<>();
 
-        Response responseConnections = connectionService.findAllConnectionsIdsByStatus(rootOrg, userId, Constants.Status.APPROVED, offset, limit);
-        return responseConnections;
+			List<String> includeFields = sourceFields != null && !Arrays.asList(sourceFields).isEmpty()
+					? Arrays.asList(sourceFields)
+					: ProfileUtils.getUserDefaultFields();
 
-    }
+			for (Search sRequest : mSearchRequest.getSearch()) {
 
+				StringBuilder searchPath = new StringBuilder();
+				searchPath.append(ProfileUtils.Profile.PROFILE_DETAILS).append(".").append(sRequest.getField());
+				// Prepare of SearchDTO
+				RegistryRequest registryRequest = new RegistryRequest();
+				Map<String, Object> searchQueryMap = new HashMap<>();
+				Map<String, Object> additionalProperties = new HashMap<>();
+				additionalProperties.put(searchPath.toString(), sRequest.getValues().get(0));
+				searchQueryMap.put("query", "");
+				searchQueryMap.put("filters", additionalProperties);
+				searchQueryMap.put("offset", mSearchRequest.getOffset());
+				searchQueryMap.put("limit", mSearchRequest.getSize());
+				searchQueryMap.put("fields", includeFields);
 
+				registryRequest.setRequest(searchQueryMap);
+				tags.add(sRequest.getField());
 
-    @Override
-    public Response findProfileRequested(String rootOrg, String userId, int offset, int limit, Constants.DIRECTION direction) {
-        Response responseConnections = connectionService.findConnectionsRequested(rootOrg, userId, offset, limit, direction);
-        return  responseConnections;
+				// Hit user search Api
+				ResponseEntity<?> responseEntity = ProfileUtils.getResponseEntity(
+						connectionProperties.getLearnerServiceHost(), connectionProperties.getUserSearchEndPoint(),
+						registryRequest);
+				JsonNode node = mapper.convertValue(responseEntity.getBody(), JsonNode.class);
+				ArrayNode arrayRes = JsonNodeFactory.instance.arrayNode();
+				ArrayNode nodes = (ArrayNode) node.get("result").get("response").get("content");
+				for (JsonNode n : nodes) {
+					if (!connectionIdsToExclude.contains(n.get(ProfileUtils.Profile.USER_ID).asText())) {
+						((ObjectNode) n.get(ProfileUtils.Profile.PROFILE_DETAILS)).put(ProfileUtils.Profile.USER_ID,
+								n.get(ProfileUtils.Profile.USER_ID).asText());
+						((ObjectNode) n.get(ProfileUtils.Profile.PROFILE_DETAILS)).put(ProfileUtils.Profile.ID,
+								n.get(ProfileUtils.Profile.USER_ID).asText());
+						((ObjectNode) n.get(ProfileUtils.Profile.PROFILE_DETAILS)).put(ProfileUtils.Profile.AT_ID,
+								n.get(ProfileUtils.Profile.USER_ID).asText());
+						arrayRes.add(n.get(ProfileUtils.Profile.PROFILE_DETAILS));
+					}
+				}
 
-    }
+				tagRes.put(sRequest.getField(), arrayRes);
 
+			}
+			logger.info("user search result :: {}", new PrettyPrintingMap<>(tagRes));
 
-    //TODO: user wrapper layer to connect opensaber
-    @Override
-    public Response multiSearchProfiles(String rootOrg, String userId, MultiSearch mSearchRequest, String[] sourceFields) {
+			List<Object> finalRes = new ArrayList<>();
+			for (Map.Entry entry : tagRes.entrySet()) {
+				Map<String, Object> resObjects = new HashMap<>();
+				resObjects.put("field", entry.getKey());
+				resObjects.put("results", entry.getValue());
+				finalRes.add(resObjects);
+			}
 
+			response.put(Constants.ResponseStatus.MESSAGE, Constants.ResponseStatus.SUCCESSFUL);
+			response.put(Constants.ResponseStatus.DATA, finalRes);
+			response.put(Constants.ResponseStatus.STATUS, HttpStatus.OK);
 
-        Response response = new Response();
-        try{
-            List<String> connectionIdsToExclude = connectionService.findUserConnections(rootOrg, userId);
-            connectionIdsToExclude.add(userId);
-            logger.info("connectionIdsToExclude ->"+connectionIdsToExclude);
+		} catch (Exception e) {
+			logger.error(Constants.Message.CONNECTION_EXCEPTION_OCCURED, e);
+			throw new ApplicationException(Constants.Message.FAILED_CONNECTION);
 
-            logger.info("multisearch request -> "+mapper.writeValueAsString(mSearchRequest));
+		}
 
-            List<String> tags = new ArrayList<>();
-
-            MultiSearchRequest request = new MultiSearchRequest();
-
-            for(Search sRequest: mSearchRequest.getSearch()) {
-
-                SearchRequest searchRequest = new SearchRequest();
-
-                searchRequest.indices(connectionProperties.getEsProfileIndex());
-                searchRequest.types(connectionProperties.getEsProfileIndexType());
-
-                SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-                tags.add(sRequest.getField());
-                BoolQueryBuilder query = QueryBuilders.boolQuery().must(QueryBuilders.termsQuery(sRequest.getField().concat(".keyword"), sRequest.getValues())).mustNot(QueryBuilders.termsQuery("id.keyword", connectionIdsToExclude));
-
-                searchSourceBuilder.query(query);
-                searchRequest.source(searchSourceBuilder);
-                if (sourceFields != null && sourceFields.length>0) {
-                    String[] mergedSource = (String[])Stream.of(connectionProperties.getEsProfileSourceFields(), sourceFields).flatMap(Stream::of).toArray();
-                    searchSourceBuilder.fetchSource(mergedSource, new String[] {});
-
-                } else {
-                    searchSourceBuilder.fetchSource(connectionProperties.getEsProfileSourceFields(), new String[] {});
-
-                }
-                searchSourceBuilder.from(mSearchRequest.getOffset());
-                searchSourceBuilder.size(mSearchRequest.getSize());
-                searchSourceBuilder.sort("osCreatedAt", SortOrder.DESC);
-
-                request.add(searchRequest);
-
-            }
-
-            MultiSearchResponse multiSearchResponse = restHighLevelClient.msearch(request, RequestOptions.DEFAULT);
-
-            List<Object> finalRes = new ArrayList<>();
-            for(int i=0; i< multiSearchResponse.getResponses().length; i++){
-                SearchResponse searchResponse = multiSearchResponse.getResponses()[i].getResponse();
-
-                //logger.info("multi search searchResponse->"+searchResponse);
-                Map<String, Object> resObjects = new HashMap<>();
-                List<Object> results = new ArrayList<>();
-                for (SearchHit hit : searchResponse.getHits()) {
-                    results.add(hit.getSourceAsMap());
-                }
-                resObjects.put("field",tags.get(i));
-                resObjects.put("results", results);
-                finalRes.add(resObjects);
-
-
-            }
-            response.put(Constants.ResponseStatus.MESSAGE, Constants.ResponseStatus.SUCCESSFUL);
-            response.put(Constants.ResponseStatus.DATA, finalRes);
-            response.put(Constants.ResponseStatus.STATUS, HttpStatus.OK);
-
-
-
-        } catch (Exception e){
-            logger.error(Constants.Message.CONNECTION_EXCEPTION_OCCURED, e);
-            throw new ApplicationException(Constants.Message.FAILED_CONNECTION );
-
-        }
-
-        return response;
-    }
+		return response;
+	}
 
 }

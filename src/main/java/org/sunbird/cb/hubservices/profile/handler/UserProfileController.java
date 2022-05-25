@@ -16,12 +16,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/v1/user")
 public class UserProfileController {
 
-	/*
-	 * @Autowired RestTemplate restTemplate;
-	 * 
-	 * @Value(value = "${user.registry.ip}") String baseUrl;
-	 */
-
 	@Autowired
 	private ProfileUtils profileUtils;
 
@@ -44,12 +38,9 @@ public class UserProfileController {
 
 	@PostMapping("/update/workflow/profile")
 	public ResponseEntity updateProfileWithWF(@RequestParam String userId,
-			@RequestBody List<Map<String, Object>> requests) throws Exception {
-
-		ResponseEntity response = null;
-		RegistryRequest registryRequest = profileRequestHandler.updateRequestWithWF(userId, requests);
-		response = profileUtils.getResponseEntity(ProfileUtils.URL.UPDATE.getValue(), registryRequest);
-		return response;
+			@RequestBody List<Map<String, Object>> requests) {
+		Map<String, Object> registryRequest = profileRequestHandler.updateRequestWithWF(userId, requests);
+		return profileUtils.updateProfile(userId, registryRequest);
 	}
 
 	@GetMapping("/search/profile")
