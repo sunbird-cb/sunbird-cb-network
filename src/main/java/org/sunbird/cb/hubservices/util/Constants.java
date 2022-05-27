@@ -15,7 +15,7 @@ public class Constants {
 
 	public enum Graph {
 		ID("id"), STATUS(ResponseStatus.STATUS), UUID("UUID"), PROPS("props"), CREATED_AT("createdAt"),
-		UPDATED_AT("updatedAt");
+		UPDATED_AT("updatedAt"), NAME("name"), DEPARTMENT("department");
 
 		private String value;
 

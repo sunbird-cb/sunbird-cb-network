@@ -37,8 +37,8 @@ public class ConnectionService implements IConnectionService {
 		Response response = new Response();
 		try {
 			if (validateRequest(request)) {
-				Node from = new Node(request.getUserIdFrom());
-				Node to = new Node(request.getUserIdTo());
+				Node from = new Node(request.getUserIdFrom(), request.getUserNameFrom(), request.getUserDepartmentFrom());
+				Node to = new Node(request.getUserIdTo(), request.getUserNameTo(), request.getUserDepartmentTo());
 				Map<String, String> relP = new HashMap<>();
 				relP.put(Constants.Graph.STATUS.getValue(), request.getStatus());
 				if (request.getCreatedAt() != null)

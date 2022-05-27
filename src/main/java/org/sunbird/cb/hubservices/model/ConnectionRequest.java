@@ -4,9 +4,46 @@ public class ConnectionRequest {
 
 	private String userIdFrom;
 	private String userIdTo;
+
+	private String userNameFrom;
+	private String userNameTo;
+	private String userDepartmentFrom;
+	private String userDepartmentTo;
 	private String status;
 	private String createdAt;
 	private String updatedAt;
+
+	public String getUserNameFrom() {
+		return userNameFrom;
+	}
+
+	public void setUserNameFrom(String userNameFrom) {
+		this.userNameFrom = userNameFrom;
+	}
+
+	public String getUserNameTo() {
+		return userNameTo;
+	}
+
+	public void setUserNameTo(String userNameTo) {
+		this.userNameTo = userNameTo;
+	}
+
+	public String getUserDepartmentFrom() {
+		return userDepartmentFrom;
+	}
+
+	public void setUserDepartmentFrom(String userDepartmentFrom) {
+		this.userDepartmentFrom = userDepartmentFrom;
+	}
+
+	public String getUserDepartmentTo() {
+		return userDepartmentTo;
+	}
+
+	public void setUserDepartmentTo(String userDepartmentTo) {
+		this.userDepartmentTo = userDepartmentTo;
+	}
 
 	public String getCreatedAt() {
 		return createdAt;

@@ -50,9 +50,7 @@ public class GraphDao implements IGraphDao {
 				Map<String, Object> parameters = new HashMap<>();
 				parameters.put("fromUUID", node.getId());
 				StringBuilder queryNodeExist = new StringBuilder();
-				queryNodeExist.append("MATCH (n:").append(label).append(") WHERE n.id = $fromUUID ").append("RETURN n");
-
-				Statement statement = new Statement(queryNodeExist.toString(), parameters);
+				Statement statement = new Statement("MATCH (n:userV2) WHERE n.id = 'da9b54cb-7635-4016-a543-a1f3fb2fab8c' RETURN n");
 				StatementResult result = transaction.run(statement);
 				result.consume();
 				if (!result.list().isEmpty()) {
