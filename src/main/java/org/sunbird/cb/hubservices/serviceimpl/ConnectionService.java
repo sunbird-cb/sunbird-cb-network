@@ -1,18 +1,10 @@
 package org.sunbird.cb.hubservices.serviceimpl;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.sunbird.cb.hubservices.exception.ApplicationException;
 import org.sunbird.cb.hubservices.exception.BadRequestException;
@@ -20,18 +12,18 @@ import org.sunbird.cb.hubservices.model.ConnectionRequest;
 import org.sunbird.cb.hubservices.model.Node;
 import org.sunbird.cb.hubservices.model.NotificationEvent;
 import org.sunbird.cb.hubservices.model.Response;
-import org.sunbird.cb.hubservices.profile.handler.IProfileRequestHandler;
-import org.sunbird.cb.hubservices.profile.handler.ProfileUtils;
-import org.sunbird.cb.hubservices.profile.handler.RegistryRequest;
 import org.sunbird.cb.hubservices.service.IConnectionService;
 import org.sunbird.cb.hubservices.service.IGraphService;
 import org.sunbird.cb.hubservices.util.ConnectionProperties;
 import org.sunbird.cb.hubservices.util.Constants;
 
+import java.util.*;
+import java.util.stream.Collectors;
+
 @Service
 public class ConnectionService implements IConnectionService {
 
-	private Logger logger = LoggerFactory.getLogger(ConnectionService.class);
+	private final Logger logger = LoggerFactory.getLogger(ConnectionService.class);
 
 	@Autowired
 	private NotificationService notificationService;
@@ -41,15 +33,6 @@ public class ConnectionService implements IConnectionService {
 
 	@Autowired
 	IGraphService graphService;
-
-	@Autowired
-	IProfileRequestHandler profileRequestHandler;
-
-	@Autowired
-	ProfileUtils profileUtils;
-
-	@Value("${update.profile.connections}")
-	private boolean updateProfileConnections;
 
 	@Override
 	public Response add(String rootOrg, ConnectionRequest request) throws Exception {
@@ -71,9 +54,8 @@ public class ConnectionService implements IConnectionService {
 				sendNotification(rootOrg, connectionProperties.getNotificationTemplateRequest(), request.getUserId(),
 						request.getConnectionId(), Constants.Status.PENDING);
 
-			if (created && updateProfileConnections) {
+			if (created && connectionProperties.isUpdateProfileConnections()) {
 				logger.info("On add, updating connections into profile for {}", request.getUserId());
-				updateProfileConnections(request.getUserId(), Constants.Status.PENDING, null, "initiatedConnections");
 			}
 
 			response.put(Constants.ResponseStatus.MESSAGE, Constants.ResponseStatus.SUCCESSFUL);
@@ -89,29 +71,8 @@ public class ConnectionService implements IConnectionService {
 
 	}
 
-	// @Async("connectionExecutor")
-	public void updateProfileConnections(String userId, String status, Constants.DIRECTION direction, String key) {
-		try {
-			int count = graphService.getAllNodeCount(userId, status, direction);
-			List<Node> nodes = graphService.getNodesInEdge(userId, status, 0, count);
-			Map<String, Object> profileRequest = new HashMap<>();
-			profileRequest.put(key, nodes);
-
-			RegistryRequest registryRequest = profileRequestHandler.updateRequest(userId, profileRequest);
-			ResponseEntity<?> responseEntity = profileUtils.getResponseEntity(ProfileUtils.URL.UPDATE.getValue(),
-					registryRequest);
-			logger.info("Updating profile for {}: {}", userId, responseEntity.getBody());
-
-		} catch (Exception e) {
-			e.printStackTrace();
-			logger.error("Updating profile for {}: {}", userId, e);
-
-		}
-
-	}
-
 	@Override
-	public Response update(String rootOrg, ConnectionRequest request) throws Exception {
+	public Response update(String rootOrg, ConnectionRequest request) {
 		Response response = new Response();
 
 		try {
@@ -129,10 +90,8 @@ public class ConnectionService implements IConnectionService {
 				sendNotification(rootOrg, connectionProperties.getNotificationTemplateResponse(),
 						request.getConnectionId(), request.getUserId(), request.getStatus());
 
-			if (updated && updateProfileConnections) {
+			if (updated && connectionProperties.isUpdateProfileConnections()) {
 				logger.info("On update, updating connections into profile for {}", request.getUserId());
-				updateProfileConnections(request.getUserId(), request.getStatus(), Constants.DIRECTION.IN,
-						request.getStatus() + "Connections");
 
 			}
 			response.put(Constants.ResponseStatus.MESSAGE, Constants.ResponseStatus.SUCCESSFUL);
@@ -148,8 +107,8 @@ public class ConnectionService implements IConnectionService {
 	}
 
 	@Override
-	public void sendNotification(String rootOrg, String eventId, String sender, String reciepient, String status) {
-		NotificationEvent event = notificationService.buildEvent(eventId, sender, reciepient, status);
+	public void sendNotification(String rootOrg, String eventId, String sender, String recipient, String status) {
+		NotificationEvent event = notificationService.buildEvent(eventId, sender, recipient, status);
 		notificationService.postEvent(rootOrg, event);
 	}
 
@@ -167,8 +126,6 @@ public class ConnectionService implements IConnectionService {
 			List<Node> detachedNodes = nodes.stream().filter(node -> !allNodesIds.contains(node.getIdentifier()))
 					.collect(Collectors.toList());
 
-			// System.out.println("commons ->"+new
-			// ObjectMapper().writeValueAsString(commonConnections));
 			if (detachedNodes.isEmpty()) {
 				response.put(Constants.ResponseStatus.MESSAGE, Constants.ResponseStatus.FAILED);
 				response.put(Constants.ResponseStatus.DATA, detachedNodes);
@@ -229,7 +186,7 @@ public class ConnectionService implements IConnectionService {
 				throw new BadRequestException(Constants.Message.USER_ID_INVALID);
 			}
 
-			List<Node> nodes = new ArrayList<>();
+			List<Node> nodes;
 			if (direction.equals(Constants.DIRECTION.IN))
 				nodes = graphService.getNodesInEdge(userId, Constants.Status.PENDING, offset, limit);
 
@@ -254,7 +211,17 @@ public class ConnectionService implements IConnectionService {
 
 	@Override
 	public List<String> findUserConnections(String rootOrg, String userId) throws Exception {
-		return graphService.getAllNodes(userId).stream().map(node -> node.getIdentifier()).collect(Collectors.toList());
+		return graphService.getAllNodes(userId).stream().map(Node::getIdentifier).collect(Collectors.toList());
+	}
+
+	@Override
+	public List<String> findUserConnectionsV2(String userId, String status)  {
+		Map<String, String> relationProperties = new HashMap<>();
+		relationProperties.put(Constants.Graph.STATUS.getValue(), status);
+		return graphService
+				.getNodes(userId, relationProperties, null, 0, 300,
+						Collections.singletonList(Constants.Graph.IDENTIFIER.getValue()))
+				.stream().map(Node::getIdentifier).collect(Collectors.toList());
 
 	}
 }

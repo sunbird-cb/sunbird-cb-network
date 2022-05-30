@@ -1,6 +1,7 @@
 package org.sunbird.cb.hubservices.service;
 
 import java.util.List;
+import java.util.Map;
 
 import org.sunbird.cb.hubservices.model.Node;
 import org.sunbird.cb.hubservices.util.Constants;
@@ -22,5 +23,9 @@ public interface IGraphService {
 	public int getAllNodeCount(String identifier, String relation, Constants.DIRECTION direction) throws Exception;
 
 	public List<Node> getAllNodes(String identifier) throws Exception;
+
+
+	public List<Node> getNodes(String identifier, Map<String, String> relationProperties, Constants.DIRECTION direction,
+							   int offset, int size, List<String> attributes);
 
 }

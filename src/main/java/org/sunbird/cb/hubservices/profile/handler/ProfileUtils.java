@@ -2,6 +2,7 @@ package org.sunbird.cb.hubservices.profile.handler;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -12,25 +13,12 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
+import org.sunbird.cb.hubservices.model.RegistryRequest;
+import org.sunbird.cb.hubservices.util.Constants;
 
 @Component
 public class ProfileUtils {
-
     static final RestTemplate restTemplate = new RestTemplate();
-
-    @Value(value = "${user.registry.ip}")
-    String baseUrl;
-
-    public static enum API {
-        CREATE("open-saber.registry.create"), READ("open-saber.registry.read"),
-        SEARCH("open-saber.registry.search"), UPDATE("open-saber.registry.update");
-        private String value;
-
-        private API(String value) { this.value = value; }
-        public String getValue() {
-            return this.value;
-        }
-    }
 
     public static enum URL {
         CREATE("/add"), READ("/read"),
@@ -42,7 +30,15 @@ public class ProfileUtils {
             return this.value;
         }
     }
-
+    public static List<String> getUserDefaultFields() {
+        List<String> userFields = new ArrayList<>();
+        userFields.add(Constants.PROFILE_DETAILS_PROFESSIOANAL_DETAILS);
+        userFields.add(Constants.PROFILE_DETAILS_EMPLOYMENT_DETAILS);
+        userFields.add(Constants.PROFILE_DETAILS_PERSONAL_DETAILS);
+        userFields.add(Constants.USER_ID);
+        userFields.add(Constants.STATUS);
+        return userFields;
+    }
     private static final String UTIL_CLASS = "Utility class";
 
     public enum STATUS { APPROVED, REJECTED, PENDING }
@@ -71,6 +67,7 @@ public class ProfileUtils {
         public static final String FILTERs = "filters";
         public static final String REQUEST = "request";
         public static final String ENTITY_TYPE = "entityType";
+        public static final String PROFILE_DETAILS = "profileDetails";
 
     }
 
@@ -113,10 +110,9 @@ public class ProfileUtils {
         }
     }
 
-    public ResponseEntity getResponseEntity(String endPoint, RegistryRequest registryRequest){
+    public static ResponseEntity getResponseEntity(String baseUrl, String endPoint, RegistryRequest registryRequest){
         HttpHeaders requestHeaders = new HttpHeaders();
-        requestHeaders.add("Accept", MediaType.APPLICATION_JSON_VALUE);
-
+        requestHeaders.add(Constants.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
         HttpEntity<RegistryRequest> requestEntity = new HttpEntity<>(registryRequest, requestHeaders);
 
         ResponseEntity responseEntity = restTemplate.exchange(

@@ -36,6 +36,15 @@ public interface IConnectionService {
 	 */
 	Response findSuggestedConnections(String rootOrg, String userId, int offset, int limit);
 
+	/**
+	 *
+	 * @param rootOrg
+	 * @param userId
+	 * @param status
+	 * @param offset
+	 * @param limit
+	 * @return
+	 */
 	public Response findAllConnectionsIdsByStatus(String rootOrg, String userId, String status, int offset, int limit);
 
 	/**
@@ -48,14 +57,30 @@ public interface IConnectionService {
 			Constants.DIRECTION direction);
 
 	/**
-	 * Send notification
 	 *
 	 * @param rootOrg
 	 * @param eventId
-	 * @param userConnection
+	 * @param sender
+	 * @param recipient
+	 * @param status
 	 */
-	void sendNotification(String rootOrg, String eventId, String sender, String reciepient, String status);
+	void sendNotification(String rootOrg, String eventId, String sender, String recipient, String status);
 
+	/**
+	 *
+	 * @param rootOrg
+	 * @param userId
+	 * @return
+	 * @throws Exception
+	 */
 	List<String> findUserConnections(String rootOrg, String userId) throws Exception;
 
+	/**
+	 *
+	 * @param userId
+	 * @param status
+	 * @return
+	 * @throws Exception
+	 */
+    List<String> findUserConnectionsV2(String userId, String status) throws Exception;
 }

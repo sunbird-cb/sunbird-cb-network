@@ -57,6 +57,96 @@ public class ConnectionProperties {
 	@Value("${notification.enabled}")
 	private boolean notificationEnabled;
 
+	@Value("${sunbird.learner.service.host}")
+	private String learnerServiceHost;
+
+	@Value("${sunbird.user.search.endpoint}")
+	private String userSearchEndPoint;
+
+
+	@Value("${update.profile.connections}")
+	private boolean updateProfileConnections;
+
+	public void setEsPort(String esPort) {
+		this.esPort = esPort;
+	}
+
+	public void setEsUser(String esUser) {
+		this.esUser = esUser;
+	}
+
+	public void setEsPassword(String esPassword) {
+		this.esPassword = esPassword;
+	}
+
+	public void setEsProfileIndex(String esProfileIndex) {
+		this.esProfileIndex = esProfileIndex;
+	}
+
+	public void setEsProfileIndexType(String esProfileIndexType) {
+		this.esProfileIndexType = esProfileIndexType;
+	}
+
+	public void setEsProfileSourceFields(String[] esProfileSourceFields) {
+		this.esProfileSourceFields = esProfileSourceFields;
+	}
+
+	public void setNotificationIp(String notificationIp) {
+		this.notificationIp = notificationIp;
+	}
+
+	public void setNotificationEventEndpoint(String notificationEventEndpoint) {
+		this.notificationEventEndpoint = notificationEventEndpoint;
+	}
+
+	public void setNotificationTemplateTargetUrl(String notificationTemplateTargetUrl) {
+		this.notificationTemplateTargetUrl = notificationTemplateTargetUrl;
+	}
+
+	public void setNotificationTemplateTargetUrlValue(String notificationTemplateTargetUrlValue) {
+		this.notificationTemplateTargetUrlValue = notificationTemplateTargetUrlValue;
+	}
+
+	public void setNotificationTemplateSender(String notificationTemplateSender) {
+		this.notificationTemplateSender = notificationTemplateSender;
+	}
+
+	public void setNotificationTemplateReciepient(String notificationTemplateReciepient) {
+		this.notificationTemplateReciepient = notificationTemplateReciepient;
+	}
+
+	public void setNotificationTemplateRequest(String notificationTemplateRequest) {
+		this.notificationTemplateRequest = notificationTemplateRequest;
+	}
+
+	public void setNotificationTemplateResponse(String notificationTemplateResponse) {
+		this.notificationTemplateResponse = notificationTemplateResponse;
+	}
+
+	public void setNotificationTemplateStatus(String notificationTemplateStatus) {
+		this.notificationTemplateStatus = notificationTemplateStatus;
+	}
+
+	public void setNotificationEnabled(boolean notificationEnabled) {
+		this.notificationEnabled = notificationEnabled;
+	}
+
+	public void setLearnerServiceHost(String learnerServiceHost) {
+		this.learnerServiceHost = learnerServiceHost;
+	}
+
+	public void setUserSearchEndPoint(String userSearchEndPoint) {
+		this.userSearchEndPoint = userSearchEndPoint;
+	}
+
+	public boolean isUpdateProfileConnections() {
+		return updateProfileConnections;
+	}
+
+	public void setUpdateProfileConnections(boolean updateProfileConnections) {
+		this.updateProfileConnections = updateProfileConnections;
+	}
+
 	public String getEsProfileIndex() {
 		return esProfileIndex;
 	}
@@ -123,5 +213,13 @@ public class ConnectionProperties {
 
 	public boolean isNotificationEnabled() {
 		return notificationEnabled;
+	}
+
+	public String getLearnerServiceHost() {
+		return learnerServiceHost;
+	}
+
+	public String getUserSearchEndPoint() {
+		return userSearchEndPoint;
 	}
 }

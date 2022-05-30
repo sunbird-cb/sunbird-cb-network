@@ -2,9 +2,35 @@ package org.sunbird.cb.hubservices.util;
 
 public class Constants {
 
+	public static final String FIELD_KEY = "fieldKey";
+	public static final String OFFSET = "offset";
+	public static final String LIMIT = "limit";
+	public static final String USER_ID = "userId";
+	public static final String STATUS = "status";
+	public static final String ACCEPT = "Accept";
+	public static final String RESPONSE = "response";
+	public static final String OSID = "osid";
+	public static final String PROFILE_DETAILS_PROFESSIOANAL_DETAILS = "profileDetails.professionalDetails";
+	public static final String PROFILE_DETAILS_EMPLOYMENT_DETAILS = "profileDetails.employmentDetails";
+	public static final String PROFILE_DETAILS_PERSONAL_DETAILS = "profileDetails.personalDetails";
+    public static final String PAGE_SIZE = "pageSize";
+    public static final String PAGE_NO = "pageNo";
+	public static final String CONNECTIONS = "/connections";
+	public static final String CONNECTIONS_PROFILE = "/connections/profile";
+	public static final String FIND_RECOMMENDED = "/find/recommended";
+	public static final String FIND_SUGGESTS = "/find/suggests";
+	public static final String FETCH_REQUESTED = "/fetch/requested";
+	public static final String FETCH_REQUESTS_RECEIVED = "/fetch/requests/received";
+	public static final String FETCH_ESTABLISHED = "/fetch/established";
+	public static final String ADD = "/add";
+	public static final String UPDATE = "/update";
+	public static final String INCLUDE_SOURCES = "includeSources";
+	public static final String DATA = "data";
+	public static final String CHILD_DATA = "childData";
+
 	public static enum Graph {
 		NODE("n"), NODEID("nodeId"), IDENTIFIER("identifier"), LEVEL("level"), TYPE("type"), NAME("name"),
-		RELATION_LABEL("IS_PARENT_OF");
+		RELATION_LABEL("IS_PARENT_OF"), STATUS("status");
 
 		private String value;
 

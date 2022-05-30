@@ -36,9 +36,6 @@ public class NotificationService implements INotificationService {
 	@Autowired
 	ConnectionProperties connectionProperties;
 
-	@Autowired
-	private ProfileService profileService;
-
 	@Override
 	public NotificationEvent buildEvent(String eventId, String sender, String reciepient, String status) {
 

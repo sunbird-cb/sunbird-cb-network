@@ -11,15 +11,16 @@ import org.springframework.web.bind.annotation.RestController;
 import org.sunbird.cb.hubservices.model.ConnectionRequest;
 import org.sunbird.cb.hubservices.model.Response;
 import org.sunbird.cb.hubservices.serviceimpl.ConnectionService;
+import org.sunbird.cb.hubservices.util.Constants;
 
 @RestController
-@RequestMapping("/connections")
+@RequestMapping(Constants.CONNECTIONS)
 public class UserConnectionCrudController {
 
 	@Autowired
 	private ConnectionService connectionService;
 
-	@PostMapping("/add")
+	@PostMapping(Constants.ADD)
 	public ResponseEntity<Response> add(@RequestHeader String rootOrg, @RequestBody ConnectionRequest request)
 			throws Exception {
 		Response response = connectionService.add(rootOrg, request);
@@ -27,7 +28,7 @@ public class UserConnectionCrudController {
 
 	}
 
-	@PostMapping("/update")
+	@PostMapping(Constants.UPDATE)
 	public ResponseEntity<Response> update(@RequestHeader String rootOrg, @RequestBody ConnectionRequest request)
 			throws Exception {
 		Response response = connectionService.update(rootOrg, request);
