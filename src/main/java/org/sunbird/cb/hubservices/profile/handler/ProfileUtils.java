@@ -1,10 +1,6 @@
 package org.sunbird.cb.hubservices.profile.handler;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import org.apache.http.client.HttpClient;
@@ -110,6 +106,7 @@ public class ProfileUtils {
 		public static final String REQUEST = "request";
 		public static final String ENTITY_TYPE = "entityType";
 		public static final String PROFILE_DETAILS = "profileDetails";
+		public static final String PROFESSIONAL_DETAILS = "professionalDetails";
 
 	}
 
@@ -135,20 +132,34 @@ public class ProfileUtils {
 	public static void mergeLeaf(Map<String, Object> mapLeft, Map<String, Object> mapRight, String leafKey, String id) {
 		// go over all the keys of the right map
 
-		for (String key : mapLeft.keySet()) {
+		if (mapLeft.containsKey(leafKey)) {
+			for (String key : mapLeft.keySet()) {
 
-			if (key.equalsIgnoreCase(leafKey) && (mapLeft.get(key) instanceof ArrayList) && !id.isEmpty()) {
+				if (mapLeft.get(key) instanceof ArrayList) {
+					Set<String> childRequest = mapRight.keySet();
+					for (String keys : childRequest) {
+						List<Map<String, Object>> childExisting = (List<Map<String, Object>>) mapLeft.get(key);
+						Map<String, Object> childExistingIndex = (Map<String, Object>) childExisting.get(0);
+						childExistingIndex.put(keys, mapRight.get(keys));
+					}
+				}
+				if (key.equalsIgnoreCase(leafKey) && (mapLeft.get(key) instanceof HashMap)) {
+					mapLeft.put(key, mapRight);
 
-				((ArrayList) mapLeft.get(key)).removeIf(
-						o -> ((Map) o).get("osid") != null && ((Map) o).get("osid").toString().equalsIgnoreCase(id));
-				((ArrayList) mapLeft.get(key)).add(mapRight);
+				}
 
 			}
-			if (key.equalsIgnoreCase(leafKey) && (mapLeft.get(key) instanceof HashMap)) {
-				mapLeft.put(key, mapRight);
-
+		} else {
+			if (leafKey.equals(Profile.PROFESSIONAL_DETAILS)) {
+				List<Map<String, Object>> professionalData = new ArrayList<>();
+				Map<String, Object> professionalDataChild = new HashMap<>();
+				Set<String> childRequest = mapRight.keySet();
+				for (String keys : childRequest) {
+					professionalDataChild.put(keys, mapRight.get(keys));
+				}
+				professionalData.add(professionalDataChild);
+				mapLeft.put(Profile.PROFESSIONAL_DETAILS, professionalData);
 			}
-
 		}
 	}
 
