@@ -1,9 +1,6 @@
 package org.sunbird.cb.hubservices.serviceimpl;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,31 +29,16 @@ public class ConnectionService implements IConnectionService {
 
 	@Autowired
 	INodeService nodeService;
-
-	public Response upsert(ConnectionRequest request) {
+	@Override
+	public Response upsert(Node from, Node to, Map<String, String> relP) {
 		Response response = new Response();
 		try {
-			if (validateRequest(request)) {
-				Node from = new Node(request.getUserIdFrom());
-				Node to = new Node(request.getUserIdTo());
-				Map<String, String> relP = new HashMap<>();
-				relP.put(Constants.Graph.STATUS.getValue(), request.getStatus());
-				if (request.getCreatedAt() != null)
-					relP.put(Constants.Graph.CREATED_AT.getValue(), request.getCreatedAt());
-				if (request.getUpdatedAt() != null)
-					relP.put(Constants.Graph.UPDATED_AT.getValue(), request.getUpdatedAt());
-
 				nodeService.connect(from, to, relP);
-
 				if (connectionProperties.isNotificationEnabled())
-					sendNotification(connectionProperties.getNotificationTemplateRequest(), request.getUserIdFrom(),
-							request.getUserIdTo(), request.getStatus());
-
+					sendNotification(connectionProperties.getNotificationTemplateRequest(), from.getId(),
+							to.getId(), relP.get("status"));
 				response.put(Constants.ResponseStatus.MESSAGE, Constants.ResponseStatus.SUCCESSFUL);
 				response.put(Constants.ResponseStatus.STATUS, HttpStatus.CREATED);
-			} else {
-				response.put(Constants.ResponseStatus.MESSAGE, Constants.ResponseStatus.FAILED);
-			}
 		} catch (ValidationException ve) {
 			response.put(Constants.ResponseStatus.STATUS, HttpStatus.BAD_REQUEST);
 		} catch (Exception e) {
@@ -65,8 +47,8 @@ public class ConnectionService implements IConnectionService {
 
 		return response;
 	}
-
-	private boolean validateRequest(ConnectionRequest request) {
+	@Override
+	public boolean validateRequest(ConnectionRequest request) {
 		return (!request.getUserIdFrom().isEmpty() && !request.getUserIdTo().isEmpty())
 				&& !request.getUserIdFrom().equals(request.getUserIdTo());
 	}
@@ -87,6 +69,23 @@ public class ConnectionService implements IConnectionService {
 						Arrays.asList(Constants.Graph.ID.getValue()))
 				.stream().map(Node::getId).collect(Collectors.toList());
 
+	}
+	@Override
+	public Map<String, String> setRelationshipProperties(ConnectionRequest request, Node from, Node to) {
+		Map<String, String> relP = new HashMap<>();
+		relP.put(Constants.Graph.CONNECTION_ID.getValue(), request.getConnectionId());
+		relP.put(Constants.Graph.STATUS.getValue(), request.getStatus());
+		if (request.getCreatedAt() != null){
+			relP.put(Constants.Graph.CREATED_AT.getValue(), request.getCreatedAt());
+			from.setCreatedAt(request.getCreatedAt());
+			to.setCreatedAt(request.getCreatedAt());
+		}
+		if (request.getUpdatedAt() != null) {
+			relP.put(Constants.Graph.UPDATED_AT.getValue(), request.getUpdatedAt());
+			from.setUpdatedAt(request.getUpdatedAt());
+			to.setUpdatedAt(request.getUpdatedAt());
+		}
+		return relP;
 	}
 
 	@Override
