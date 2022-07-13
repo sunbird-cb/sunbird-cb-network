@@ -7,27 +7,9 @@ public class ConnectionRequest {
 	private String userIdFrom;
 	private String userIdTo;
 	private String connectionId;
-	private String userDepartmentFrom;
-	private String userDepartmentTo;
 	private String status;
 	private String createdAt;
 	private String updatedAt;
-	public String getUserDepartmentFrom() {
-		return userDepartmentFrom;
-	}
-
-	public void setUserDepartmentFrom(String userDepartmentFrom) {
-		this.userDepartmentFrom = userDepartmentFrom;
-	}
-
-	public String getUserDepartmentTo() {
-		return userDepartmentTo;
-	}
-
-	public void setUserDepartmentTo(String userDepartmentTo) {
-		this.userDepartmentTo = userDepartmentTo;
-	}
-
 	public String getCreatedAt() {
 		return createdAt;
 	}

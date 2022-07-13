@@ -26,8 +26,8 @@ public class UserConnectionCrudController {
 		request.setCreatedAt(new Date().toString());
 		Response response = new Response();
 		if(connectionService.validateRequest(request)) {
-			Node from = new Node(request.getUserIdFrom(), request.getUserDepartmentFrom());
-			Node to = new Node(request.getUserIdTo(), request.getUserDepartmentTo());
+			Node from = new Node(request.getUserIdFrom());
+			Node to = new Node(request.getUserIdTo());
 			Map<String, String> relP = connectionService.setRelationshipProperties(request, from, to);
 			response = connectionService.upsert(from,to,relP);
 			return new ResponseEntity<>(response, (HttpStatus) response.get(Constants.STATUS));
@@ -41,8 +41,8 @@ public class UserConnectionCrudController {
 		request.setUpdatedAt(new Date().toString());
 		Response response = new Response();
 		if(connectionService.validateRequest(request)) {
-			Node to = new Node(request.getUserIdFrom(), request.getUserDepartmentFrom());
-			Node from = new Node(request.getUserIdTo(), request.getUserDepartmentTo());
+			Node to = new Node(request.getUserIdFrom());
+			Node from = new Node(request.getUserIdTo());
 			request.setUpdatedAt(new Date().toString());
 			Map<String, String> relP = connectionService.setRelationshipProperties(request, from, to);
 			response = connectionService.upsert(from,to,relP);

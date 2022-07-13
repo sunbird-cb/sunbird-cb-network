@@ -6,17 +6,11 @@ public class Node {
 
 	private String id;
 	private String name;
-	private String department;
 	private String createdAt;
 	private String updatedAt;
 
-	public Node(String id) {
+	public Node(String id){
 		this.id = id;
-	}
-
-	public Node(String id, String department){
-		this.id = id;
-		this.department = department;
 	}
 
 	public String getId() {
@@ -33,14 +27,6 @@ public class Node {
 
 	public void setName(String name) {
 		this.name = name;
-	}
-
-	public String getDepartment() {
-		return department;
-	}
-
-	public void setDepartment(String department) {
-		this.department = department;
 	}
 
 	public String getCreatedAt() {
