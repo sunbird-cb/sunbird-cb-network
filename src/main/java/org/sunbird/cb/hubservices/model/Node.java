@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 public class Node {
 
 	private String id;
-	private String name;
 	private String createdAt;
 	private String updatedAt;
 
@@ -19,14 +18,6 @@ public class Node {
 
 	public void setId(String id) {
 		this.id = id;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
 	}
 
 	public String getCreatedAt() {
