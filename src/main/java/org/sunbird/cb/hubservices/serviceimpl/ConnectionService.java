@@ -30,21 +30,25 @@ public class ConnectionService implements IConnectionService {
 	@Autowired
 	INodeService nodeService;
 	@Override
-	public Response upsert(Node from, Node to, Map<String, String> relP) {
-		Response response = new Response();
-		try {
-			nodeService.connect(from, to, relP);
-			if (connectionProperties.isNotificationEnabled())
-				sendNotification(connectionProperties.getNotificationTemplateRequest(), from.getId(),
-						to.getId(), relP.get("status"));
-			response.put(Constants.ResponseStatus.MESSAGE, Constants.ResponseStatus.SUCCESSFUL);
-			response.put(Constants.ResponseStatus.STATUS, HttpStatus.CREATED);
-		} catch (ValidationException ve) {
-			response.put(Constants.ResponseStatus.STATUS, HttpStatus.BAD_REQUEST);
-		} catch (Exception e) {
-			throw new ApplicationException(Constants.Message.FAILED_CONNECTION + e.getMessage());
+	public Response upsert(ConnectionRequest request) {
+		Response response = null;
+		if(validateRequest(request)) {
+			Node to = new Node(request.getUserIdFrom());
+			Node from = new Node(request.getUserIdTo());
+			Map<String, String> relP = setRelationshipProperties(request, from, to);
+			try {
+				nodeService.connect(from, to, relP);
+				if (connectionProperties.isNotificationEnabled())
+					sendNotification(connectionProperties.getNotificationTemplateRequest(), from.getId(),
+							to.getId(), relP.get("status"));
+				response.put(Constants.ResponseStatus.MESSAGE, Constants.ResponseStatus.SUCCESSFUL);
+				response.put(Constants.ResponseStatus.STATUS, HttpStatus.CREATED);
+			} catch (ValidationException ve) {
+				response.put(Constants.ResponseStatus.STATUS, HttpStatus.BAD_REQUEST);
+			} catch (Exception e) {
+				throw new ApplicationException(Constants.Message.FAILED_CONNECTION + e.getMessage());
+			}
 		}
-
 		return response;
 	}
 	@Override

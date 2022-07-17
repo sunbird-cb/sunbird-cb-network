@@ -17,7 +17,7 @@ public interface IConnectionService {
 	 * @param relP
 	 * @return
 	 */
-	Response upsert(Node from, Node to, Map<String, String> relP);
+	Response upsert(ConnectionRequest request);
 
 	/**
 	 * Validate if a user already exists or if the request params are correct

@@ -23,8 +23,7 @@ public class ConnectionProfileController {
 	private ProfileService profileService;
 
 	@PostMapping(Constants.FIND_RECOMMENDED)
-	public ResponseEntity<Response> findRecommendedConnections(@RequestHeader String rootOrg,
-			@RequestHeader String userId,
+	public ResponseEntity<Response> findRecommendedConnections(@RequestHeader String userId,
 			@RequestParam(required = false, name = "includeSources") String[] includeSources,
 			@RequestBody MultiSearch multiSearch) {
 
@@ -33,8 +32,7 @@ public class ConnectionProfileController {
 	}
 
 	@GetMapping(Constants.FIND_SUGGESTS)
-	public ResponseEntity<Response> findSuggests(@RequestHeader String rootOrg,
-			@RequestHeader(required = false) String org, @RequestHeader String userId,
+	public ResponseEntity<Response> findSuggests(@RequestHeader(required = false) String org, @RequestHeader String userId,
 			@RequestParam(defaultValue = "50", required = false, name = "pageSize") int pageSize,
 			@RequestParam(defaultValue = "0", required = false, name = "pageNo") int pageNo) {
 
@@ -44,8 +42,7 @@ public class ConnectionProfileController {
 	}
 
 	@GetMapping(Constants.FETCH_REQUESTED)
-	public ResponseEntity<Response> findRequests(@RequestHeader(required = true) String rootOrg,
-			@RequestHeader(required = false) String org, @RequestHeader String userId,
+	public ResponseEntity<Response> findRequests(@RequestHeader(required = false) String org, @RequestHeader String userId,
 			@RequestParam(defaultValue = "50", required = false, name = "pageSize") int pageSize,
 			@RequestParam(defaultValue = "0", required = false, name = "pageNo") int pageNo) {
 
@@ -55,8 +52,7 @@ public class ConnectionProfileController {
 	}
 
 	@GetMapping(Constants.FETCH_REQUESTS_RECEIVED)
-	public ResponseEntity<Response> findRequestsRecieved(@RequestHeader(required = true) String rootOrg,
-			@RequestHeader(required = false) String org, @RequestHeader String userId,
+	public ResponseEntity<Response> findRequestsRecieved(@RequestHeader(required = false) String org, @RequestHeader String userId,
 			@RequestParam(defaultValue = "50", required = false, name = "pageSize") int pageSize,
 			@RequestParam(defaultValue = "0", required = false, name = "pageNo") int pageNo) {
 
@@ -66,8 +62,7 @@ public class ConnectionProfileController {
 	}
 
 	@GetMapping(Constants.FETCH_ESTABLISHED)
-	public ResponseEntity<Response> findEstablished(@RequestHeader(required = true) String rootOrg,
-			@RequestHeader(required = false) String org, @RequestHeader String userId,
+	public ResponseEntity<Response> findEstablished(@RequestHeader(required = false) String org, @RequestHeader String userId,
 			@RequestParam(defaultValue = "50", required = false, name = "pageSize") int pageSize,
 			@RequestParam(defaultValue = "0", required = false, name = "pageNo") int pageNo) {
 
