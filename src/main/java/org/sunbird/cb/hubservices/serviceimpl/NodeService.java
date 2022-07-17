@@ -28,7 +28,7 @@ public class NodeService implements INodeService {
 	private IGraphDao graphDao;
 
 	@Override
-	public void connect(Node from, Node to, Map<String, String> relationProperties) {
+	public void connect(Node from, Node to, Map<String, String> relationProperties) throws Exception {
 
 		if (Objects.isNull(from) || Objects.isNull(to) || CollectionUtils.isEmpty(relationProperties))
 			throw new ValidationException("Node(s) or relation properties cannot be empty");
@@ -44,20 +44,20 @@ public class NodeService implements INodeService {
 	}
 
 	@Override
-	public List<Node> getNodes(String identifier, Map<String, String> relationProperties, Constants.DIRECTION direction,
-			int offset, int size, List<String> attributes) {
-		checkParams(identifier, relationProperties);
-		return getNodesWith(identifier, relationProperties, direction, offset, size, attributes);
+	public List<Node> getNodes(String id, Map<String, String> relationProperties, Constants.DIRECTION direction,
+							   int offset, int size, List<String> attributes) {
+		checkParams(id, relationProperties);
+		return getNodesWith(id, relationProperties, direction, offset, size, attributes);
 	}
 
 	@Override
-	public int getNodesCount(String identifier, Map<String, String> relationProperties, Constants.DIRECTION direction) {
+	public int getNodesCount(String id, Map<String, String> relationProperties, Constants.DIRECTION direction) {
 		int count = 0;
-		if (StringUtils.isEmpty(identifier)) {
-			throw new ValidationException("identifier or relation properties cannot be empty");
+		if (StringUtils.isEmpty(id)) {
+			throw new ValidationException("id or relation properties cannot be empty");
 		}
 		try {
-			count = graphDao.getNeighboursCount(identifier, relationProperties, direction);
+			count = graphDao.getNeighboursCount(id, relationProperties, direction);
 
 		} catch (GraphException e) {
 			logger.error("Nodes count failed: {}", e);
@@ -66,21 +66,21 @@ public class NodeService implements INodeService {
 	}
 
 	@Override
-	public List<Node> getNodeNextLevel(String identifier, Map<String, String> relationProperties, int offset,
-			int size) {
-		checkParams(identifier, relationProperties);
-		return graphDao.getNeighbours(identifier, relationProperties, Constants.DIRECTION.OUT, 2, offset, size,
+	public List<Node> getNodeNextLevel(String id, Map<String, String> relationProperties, int offset,
+									   int size) {
+		checkParams(id, relationProperties);
+		return graphDao.getNeighbours(id, relationProperties, Constants.DIRECTION.OUT, 2, offset, size,
 				Arrays.asList(Constants.Graph.ID.getValue()));
 	}
 
-	private List<Node> getNodesWith(String identifier, Map<String, String> relationProperties,
-			Constants.DIRECTION direction, int offset, int size, List<String> attributes) {
-		return graphDao.getNeighbours(identifier, relationProperties, direction, 1, offset, size, attributes);
+	private List<Node> getNodesWith(String id, Map<String, String> relationProperties,
+									Constants.DIRECTION direction, int offset, int size, List<String> attributes) {
+		return graphDao.getNeighbours(id, relationProperties, direction, 1, offset, size, attributes);
 	}
 
-	private void checkParams(String identifier, Map<String, String> relationProperties) {
-		if (StringUtils.isEmpty(identifier) || CollectionUtils.isEmpty(relationProperties)) {
-			throw new ValidationException("identifier or relation properties cannot be empty");
+	private void checkParams(String id, Map<String, String> relationProperties) {
+		if (StringUtils.isEmpty(id) || CollectionUtils.isEmpty(relationProperties)) {
+			throw new ValidationException("id or relation properties cannot be empty");
 		}
 	}
 

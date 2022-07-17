@@ -12,9 +12,20 @@ public class Constants {
 	public static final String PROFILE_DETAILS_PROFESSIOANAL_DETAILS = "profileDetails.professionalDetails";
 	public static final String PROFILE_DETAILS_EMPLOYMENT_DETAILS = "profileDetails.employmentDetails";
 	public static final String PROFILE_DETAILS_PERSONAL_DETAILS = "profileDetails.personalDetails";
-
+	public static final String STATUS = "status";
+	public static final String CONNECTIONS = "/connections";
+	public static final String CONNECTIONS_PROFILE = "/connections/profile";
+	public static final String FIND_RECOMMENDED = "/find/recommended";
+	public static final String FIND_SUGGESTS = "/find/suggests";
+	public static final String FETCH_REQUESTED = "/fetch/requested";
+	public static final String FETCH_REQUESTS_RECEIVED = "/fetch/requests/received";
+	public static final String FETCH_ESTABLISHED = "/fetch/established";
+	public static final String ADD = "/add";
+	public static final String UPDATE = "/update";
+	public static final String PAGE_SIZE = "pageSize";
+	public static final String PAGE_NO = "pageNo";
 	public enum Graph {
-		ID("id"), STATUS(ResponseStatus.STATUS), UUID("UUID"), PROPS("props"), CREATED_AT("createdAt"),
+		ID("id"), STATUS(ResponseStatus.STATUS), UUID("UUID"), PROPS("props"), CREATED_AT("createdAt"), CONNECTION_ID("connectionId"),
 		UPDATED_AT("updatedAt");
 
 		private String value;

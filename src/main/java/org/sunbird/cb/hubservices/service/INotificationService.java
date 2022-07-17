@@ -7,9 +7,11 @@ public interface INotificationService {
 
 	/**
 	 * Build the notification request
-	 * 
 	 * @param eventId
-	 * @param userConnection
+	 * @param sender
+	 * @param reciepient
+	 * @param status
+	 * @return
 	 */
 	NotificationEvent buildEvent(String eventId, String sender, String reciepient, String status);
 

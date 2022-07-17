@@ -8,9 +8,9 @@ import org.sunbird.cb.hubservices.util.Constants;
 
 public interface IGraphDao {
 
-	public void upsertNode(Node node);
+	public Boolean upsertNode(Node node) throws Exception ;
 
-	public void upsertRelation(Node nodeFrom, Node nodeTo, Map<String, String> relationProperties);
+	public Boolean upsertRelation(Node nodeFrom, Node nodeTo, Map<String, String> relationProperties) throws Exception;
 
 	public int getNeighboursCount(String UUID, Map<String, String> relationProperties, Constants.DIRECTION direction);
 

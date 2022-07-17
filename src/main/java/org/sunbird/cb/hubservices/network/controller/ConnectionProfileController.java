@@ -16,13 +16,13 @@ import org.sunbird.cb.hubservices.serviceimpl.ProfileService;
 import org.sunbird.cb.hubservices.util.Constants;
 
 @RestController
-@RequestMapping("/connections/profile")
+@RequestMapping(Constants.CONNECTIONS_PROFILE)
 public class ConnectionProfileController {
 
 	@Autowired
 	private ProfileService profileService;
 
-	@PostMapping("/find/recommended")
+	@PostMapping(Constants.FIND_RECOMMENDED)
 	public ResponseEntity<Response> findRecommendedConnections(@RequestHeader String rootOrg,
 			@RequestHeader String userId,
 			@RequestParam(required = false, name = "includeSources") String[] includeSources,
@@ -32,7 +32,7 @@ public class ConnectionProfileController {
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
-	@GetMapping("/find/suggests")
+	@GetMapping(Constants.FIND_SUGGESTS)
 	public ResponseEntity<Response> findSuggests(@RequestHeader String rootOrg,
 			@RequestHeader(required = false) String org, @RequestHeader String userId,
 			@RequestParam(defaultValue = "50", required = false, name = "pageSize") int pageSize,
@@ -43,7 +43,7 @@ public class ConnectionProfileController {
 
 	}
 
-	@GetMapping("/fetch/requested")
+	@GetMapping(Constants.FETCH_REQUESTED)
 	public ResponseEntity<Response> findRequests(@RequestHeader(required = true) String rootOrg,
 			@RequestHeader(required = false) String org, @RequestHeader String userId,
 			@RequestParam(defaultValue = "50", required = false, name = "pageSize") int pageSize,
@@ -54,7 +54,7 @@ public class ConnectionProfileController {
 
 	}
 
-	@GetMapping("/fetch/requests/received")
+	@GetMapping(Constants.FETCH_REQUESTS_RECEIVED)
 	public ResponseEntity<Response> findRequestsRecieved(@RequestHeader(required = true) String rootOrg,
 			@RequestHeader(required = false) String org, @RequestHeader String userId,
 			@RequestParam(defaultValue = "50", required = false, name = "pageSize") int pageSize,
@@ -65,7 +65,7 @@ public class ConnectionProfileController {
 
 	}
 
-	@GetMapping("/fetch/established")
+	@GetMapping(Constants.FETCH_ESTABLISHED)
 	public ResponseEntity<Response> findEstablished(@RequestHeader(required = true) String rootOrg,
 			@RequestHeader(required = false) String org, @RequestHeader String userId,
 			@RequestParam(defaultValue = "50", required = false, name = "pageSize") int pageSize,
