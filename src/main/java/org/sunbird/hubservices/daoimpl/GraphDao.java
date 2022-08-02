@@ -49,10 +49,12 @@ public class GraphDao implements IGraphDao {
             if (!existingNodes.isEmpty()) {
                 logger.info("Nodes exists, new node cannot be created! ");
             } else {
-                System.out.println("Node doesn't exists, new node can be created! ");
+                logger.info("Node doesn't exists, new node can be created! ");
                 Map<String, Object> params = new HashMap<>();
                 params.put(Constants.Graph.PROPS.getValue(), new ObjectMapper().convertValue(node, Map.class));
-                statement = new Statement("CREATE (n:" + label + ") SET n = $props RETURN n", params);
+                StringBuilder queryBuilder = new StringBuilder();
+                queryBuilder.append("CREATE (n:").append(label).append(") SET n = $props RETURN n");
+                statement = new Statement(queryBuilder.toString(), params);
                 result = transaction.run(statement);
                 result.consume();
                 transaction.commitAsync().toCompletableFuture().get();
@@ -64,8 +66,15 @@ public class GraphDao implements IGraphDao {
             return Boolean.FALSE;
 
         } finally {
-            transaction.close();
-            session.close();
+            try {
+                if (session != null && transaction != null) {
+                    transaction.close();
+                    session.close();
+                }
+            } catch (Exception e) {
+                logger.error("Session Closed : ", e);
+                return Boolean.FALSE;
+            }
         }
 
         return Boolean.TRUE;
