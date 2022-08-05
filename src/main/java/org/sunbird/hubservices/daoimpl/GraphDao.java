@@ -175,7 +175,6 @@ public class GraphDao implements IGraphDao {
 
                 relationProperties.forEach((key, value) -> query.append(" AND r.").append(key).append(" = ").append("'").append(value).append("'"));
                 query.append(" RETURN count(*)");
-                System.out.println("count query==" + query);
                 Statement statement = new Statement(query.toString(), parameters);
 
                 StatementResult result = transaction.run(statement);
@@ -273,7 +272,6 @@ public class GraphDao implements IGraphDao {
                 }
                 query.append(sb).append(" Skip ").append(offset).append(" limit ").append(limit);
 
-                System.out.println("query-> " + query);
                 Statement statement = new Statement(query.toString(), parameters);
 
                 StatementResult result = transaction.run(statement);
