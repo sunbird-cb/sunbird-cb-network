@@ -16,15 +16,14 @@ import org.sunbird.cb.hubservices.serviceimpl.ProfileService;
 import org.sunbird.cb.hubservices.util.Constants;
 
 @RestController
-@RequestMapping("/connections/profile")
+@RequestMapping(Constants.CONNECTIONS_PROFILE)
 public class ConnectionProfileController {
 
 	@Autowired
 	private ProfileService profileService;
 
-	@PostMapping("/find/recommended")
-	public ResponseEntity<Response> findRecommendedConnections(@RequestHeader String rootOrg,
-			@RequestHeader String userId,
+	@PostMapping(Constants.FIND_RECOMMENDED)
+	public ResponseEntity<Response> findRecommendedConnections(@RequestHeader String userId,
 			@RequestParam(required = false, name = "includeSources") String[] includeSources,
 			@RequestBody MultiSearch multiSearch) {
 
@@ -32,9 +31,8 @@ public class ConnectionProfileController {
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
-	@GetMapping("/find/suggests")
-	public ResponseEntity<Response> findSuggests(@RequestHeader String rootOrg,
-			@RequestHeader(required = false) String org, @RequestHeader String userId,
+	@GetMapping(Constants.FIND_SUGGESTS)
+	public ResponseEntity<Response> findSuggests(@RequestHeader(required = false) String org, @RequestHeader String userId,
 			@RequestParam(defaultValue = "50", required = false, name = "pageSize") int pageSize,
 			@RequestParam(defaultValue = "0", required = false, name = "pageNo") int pageNo) {
 
@@ -43,9 +41,8 @@ public class ConnectionProfileController {
 
 	}
 
-	@GetMapping("/fetch/requested")
-	public ResponseEntity<Response> findRequests(@RequestHeader(required = true) String rootOrg,
-			@RequestHeader(required = false) String org, @RequestHeader String userId,
+	@GetMapping(Constants.FETCH_REQUESTED)
+	public ResponseEntity<Response> findRequests(@RequestHeader(required = false) String org, @RequestHeader String userId,
 			@RequestParam(defaultValue = "50", required = false, name = "pageSize") int pageSize,
 			@RequestParam(defaultValue = "0", required = false, name = "pageNo") int pageNo) {
 
@@ -54,9 +51,8 @@ public class ConnectionProfileController {
 
 	}
 
-	@GetMapping("/fetch/requests/received")
-	public ResponseEntity<Response> findRequestsRecieved(@RequestHeader(required = true) String rootOrg,
-			@RequestHeader(required = false) String org, @RequestHeader String userId,
+	@GetMapping(Constants.FETCH_REQUESTS_RECEIVED)
+	public ResponseEntity<Response> findRequestsRecieved(@RequestHeader(required = false) String org, @RequestHeader String userId,
 			@RequestParam(defaultValue = "50", required = false, name = "pageSize") int pageSize,
 			@RequestParam(defaultValue = "0", required = false, name = "pageNo") int pageNo) {
 
@@ -65,9 +61,8 @@ public class ConnectionProfileController {
 
 	}
 
-	@GetMapping("/fetch/established")
-	public ResponseEntity<Response> findEstablished(@RequestHeader(required = true) String rootOrg,
-			@RequestHeader(required = false) String org, @RequestHeader String userId,
+	@GetMapping(Constants.FETCH_ESTABLISHED)
+	public ResponseEntity<Response> findEstablished(@RequestHeader(required = false) String org, @RequestHeader String userId,
 			@RequestParam(defaultValue = "50", required = false, name = "pageSize") int pageSize,
 			@RequestParam(defaultValue = "0", required = false, name = "pageNo") int pageNo) {
 

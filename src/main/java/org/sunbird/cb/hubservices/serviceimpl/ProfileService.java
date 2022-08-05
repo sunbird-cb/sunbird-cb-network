@@ -1,11 +1,10 @@
 package org.sunbird.cb.hubservices.serviceimpl;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,21 +13,17 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.sunbird.cb.hubservices.exception.ApplicationException;
 import org.sunbird.cb.hubservices.model.MultiSearch;
+import org.sunbird.cb.hubservices.model.Request;
 import org.sunbird.cb.hubservices.model.Response;
 import org.sunbird.cb.hubservices.model.Search;
 import org.sunbird.cb.hubservices.profile.handler.ProfileUtils;
-import org.sunbird.cb.hubservices.profile.handler.RegistryRequest;
 import org.sunbird.cb.hubservices.service.IConnectionService;
 import org.sunbird.cb.hubservices.service.IProfileService;
 import org.sunbird.cb.hubservices.util.ConnectionProperties;
 import org.sunbird.cb.hubservices.util.Constants;
 import org.sunbird.cb.hubservices.util.PrettyPrintingMap;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import java.util.*;
 
 @Service
 public class ProfileService implements IProfileService {
@@ -83,7 +78,7 @@ public class ProfileService implements IProfileService {
 				StringBuilder searchPath = new StringBuilder();
 				searchPath.append(ProfileUtils.Profile.PROFILE_DETAILS).append(".").append(sRequest.getField());
 				// Prepare of SearchDTO
-				RegistryRequest registryRequest = new RegistryRequest();
+				Request request = new Request();
 				Map<String, Object> searchQueryMap = new HashMap<>();
 				Map<String, Object> additionalProperties = new HashMap<>();
 				additionalProperties.put(searchPath.toString(), sRequest.getValues().get(0));
@@ -94,13 +89,13 @@ public class ProfileService implements IProfileService {
 				searchQueryMap.put("limit", mSearchRequest.getSize());
 				searchQueryMap.put("fields", includeFields);
 
-				registryRequest.setRequest(searchQueryMap);
+				request.setRequest(searchQueryMap);
 				tags.add(sRequest.getField());
 
 				// Hit user search Api
 				ResponseEntity<?> responseEntity = ProfileUtils.getResponseEntity(
 						connectionProperties.getLearnerServiceHost(), connectionProperties.getUserSearchEndPoint(),
-						registryRequest);
+						request);
 				JsonNode node = mapper.convertValue(responseEntity.getBody(), JsonNode.class);
 				ArrayNode arrayRes = JsonNodeFactory.instance.arrayNode();
 				ArrayNode nodes = (ArrayNode) node.get("result").get("response").get("content");

@@ -7,6 +7,7 @@ public class ConnectionRequest {
 	private String status;
 	private String createdAt;
 	private String updatedAt;
+	private String connectionId;
 
 	public String getCreatedAt() {
 		return createdAt;
@@ -46,6 +47,14 @@ public class ConnectionRequest {
 
 	public void setUserIdTo(String userIdTo) {
 		this.userIdTo = userIdTo;
+	}
+
+	public String getConnectionId() {
+		return connectionId;
+	}
+
+	public void setConnectionId(String connectionId) {
+		this.connectionId = connectionId;
 	}
 
 }

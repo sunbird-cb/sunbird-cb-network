@@ -1,27 +1,22 @@
 package org.sunbird.cb.hubservices.profile.handler;
 
-import java.util.*;
-import java.util.stream.Collectors;
-
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.http.client.HttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
+import org.sunbird.cb.hubservices.model.Request;
 import org.sunbird.cb.hubservices.util.ConnectionProperties;
 import org.sunbird.cb.hubservices.util.Constants;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Component
 public class ProfileUtils {
@@ -29,9 +24,6 @@ public class ProfileUtils {
 	static final RestTemplate restTemplate = new RestTemplate();
 
 	private Logger logger = LoggerFactory.getLogger(ProfileUtils.class);
-
-	@Value(value = "${user.registry.ip}")
-	String baseUrl;
 
 	@Autowired
 	private ConnectionProperties connectionProperties;
@@ -43,21 +35,6 @@ public class ProfileUtils {
 		userFields.add(Constants.PROFILE_DETAILS_PERSONAL_DETAILS);
 		userFields.add(Constants.USER_ID);
 		return userFields;
-	}
-
-	public enum API {
-		CREATE("open-saber.registry.create"), READ("open-saber.registry.read"), SEARCH("open-saber.registry.search"),
-		UPDATE("open-saber.registry.update");
-
-		private String value;
-
-		private API(String value) {
-			this.value = value;
-		}
-
-		public String getValue() {
-			return this.value;
-		}
 	}
 
 	public enum URL {
@@ -163,34 +140,21 @@ public class ProfileUtils {
 		}
 	}
 
-	public static ResponseEntity getResponseEntity(String baseUrl, String endPoint, RegistryRequest registryRequest) {
+	public static ResponseEntity getResponseEntity(String baseUrl, String endPoint, Request request) {
 		HttpHeaders requestHeaders = new HttpHeaders();
 		requestHeaders.add(Constants.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
-		HttpEntity<RegistryRequest> requestEntity = new HttpEntity<>(registryRequest, requestHeaders);
+		HttpEntity<Request> requestEntity = new HttpEntity<>(request, requestHeaders);
 		ResponseEntity responseEntity = restTemplate.exchange(baseUrl + endPoint, HttpMethod.POST, requestEntity,
 				Map.class);
-
-		return new ResponseEntity<>(responseEntity.getBody(), responseEntity.getStatusCode());
-	}
-
-	public ResponseEntity getResponseEntity(String endPoint, RegistryRequest registryRequest) {
-		HttpHeaders requestHeaders = new HttpHeaders();
-		requestHeaders.add(Constants.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
-
-		HttpEntity<RegistryRequest> requestEntity = new HttpEntity<>(registryRequest, requestHeaders);
-
-		ResponseEntity responseEntity = restTemplate.exchange(baseUrl + endPoint, HttpMethod.POST, requestEntity,
-				Map.class);
-
 		return new ResponseEntity<>(responseEntity.getBody(), responseEntity.getStatusCode());
 	}
 
 	public List<Map<String, Object>> getUserProfiles(List<String> userIds) {
 		StringBuilder builder = new StringBuilder();
 		HttpHeaders requestHeaders = new HttpHeaders();
-		Map<String, Object> registryRequest = getSearchObject(userIds);
+		Map<String, Object> request = getSearchObject(userIds);
 		requestHeaders.add(Constants.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
-		HttpEntity<Object> requestEntity = new HttpEntity<>(registryRequest, requestHeaders);
+		HttpEntity<Object> requestEntity = new HttpEntity<>(request, requestHeaders);
 		builder.append(connectionProperties.getLearnerServiceHost())
 				.append(connectionProperties.getUserSearchEndPoint());
 		ResponseEntity responseEntity = restTemplate.exchange(builder.toString(), HttpMethod.POST, requestEntity,
