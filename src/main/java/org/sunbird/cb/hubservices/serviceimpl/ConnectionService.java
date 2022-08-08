@@ -35,8 +35,8 @@ public class ConnectionService implements IConnectionService {
 	public Response upsert(ConnectionRequest request) {
 		Response response = new Response();
 		if(validateRequest(request)) {
-			Node to = new Node(request.getUserIdFrom());
-			Node from = new Node(request.getUserIdTo());
+			Node from = new Node(request.getUserIdFrom());
+			Node to = new Node(request.getUserIdTo());
 			Map<String, String> relP = setRelationshipProperties(request, from, to);
 			try {
 				nodeService.connect(from, to, relP);
