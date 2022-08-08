@@ -33,7 +33,7 @@ public class ConnectionService implements IConnectionService {
 	INodeService nodeService;
 	@Override
 	public Response upsert(ConnectionRequest request) {
-		Response response = null;
+		Response response = new Response();
 		if(validateRequest(request)) {
 			Node to = new Node(request.getUserIdFrom());
 			Node from = new Node(request.getUserIdTo());
