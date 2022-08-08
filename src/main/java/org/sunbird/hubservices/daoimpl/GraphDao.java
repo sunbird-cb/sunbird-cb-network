@@ -131,10 +131,9 @@ public class GraphDao implements IGraphDao {
                     }
                 } catch (Exception e) {
                     logger.error("Session Closed : ", e);
-                    return Boolean.FALSE;
                 }
             }
-        }
+        return Boolean.FALSE;
     }
 
     private void createRelationshipBetweenTwoNodes(Node nodeFrom, Node nodeTo, Transaction transaction, Map<String, Object> parameters) {
