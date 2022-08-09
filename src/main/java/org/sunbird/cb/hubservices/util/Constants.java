@@ -25,7 +25,11 @@ public class Constants {
 	public static final String UPDATE = "/update";
 	public static final String PAGE_SIZE = "pageSize";
 	public static final String PAGE_NO = "pageNo";
-	public enum Graph {
+    public static final String ADD_OPERATION = "Add";
+	public static final String UPDATE_OPERATION = "Update";
+
+
+    public enum Graph {
 		ID("id"), STATUS(ResponseStatus.STATUS), UUID("UUID"), PROPS("props"), CREATED_AT("createdAt"), CONNECTION_ID("connectionId"),
 		UPDATED_AT("updatedAt");
 

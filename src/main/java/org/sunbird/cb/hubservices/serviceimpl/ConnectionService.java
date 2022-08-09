@@ -32,11 +32,20 @@ public class ConnectionService implements IConnectionService {
 	@Autowired
 	INodeService nodeService;
 	@Override
-	public Response upsert(ConnectionRequest request) {
+	public Response upsert(ConnectionRequest request, String updateOperation) {
 		Response response = new Response();
+		Node from = null;
+		Node to = null;
 		if(validateRequest(request)) {
-			Node from = new Node(request.getUserIdFrom());
-			Node to = new Node(request.getUserIdTo());
+			if(updateOperation.equalsIgnoreCase(Constants.ADD_OPERATION)) {
+				from = new Node(request.getUserIdFrom());
+				to = new Node(request.getUserIdTo());
+			}
+			else if(updateOperation.equalsIgnoreCase(Constants.UPDATE_OPERATION))
+			{
+				to = new Node(request.getUserIdFrom());
+				from = new Node(request.getUserIdTo());
+			}
 			Map<String, String> relP = setRelationshipProperties(request, from, to);
 			try {
 				nodeService.connect(from, to, relP);

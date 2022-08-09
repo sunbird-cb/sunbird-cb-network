@@ -11,13 +11,15 @@ import java.util.Map;
 public interface IConnectionService {
 
 	/**
-	 * Method to upsert the nodes
-	 * @param from
-	 * @param to
-	 * @param relP
-	 * @return
-	 */
-	Response upsert(ConnectionRequest request);
+     * Method to upsert the nodes
+     *
+     * @param from
+     * @param to
+     * @param relP
+     * @param updateOperation
+     * @return
+     */
+	Response upsert(ConnectionRequest request, String updateOperation);
 
 	/**
 	 * Validate if a user already exists or if the request params are correct

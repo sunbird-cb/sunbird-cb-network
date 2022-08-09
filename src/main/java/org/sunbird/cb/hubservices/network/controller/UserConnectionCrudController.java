@@ -25,7 +25,7 @@ public class UserConnectionCrudController {
 	public ResponseEntity<Response> add(@RequestBody ConnectionRequest request) {
 		request.setStatus(Constants.Status.PENDING);
 		request.setCreatedAt(new Date().toString());
-		Response response = connectionService.upsert(request);
+		Response response = connectionService.upsert(request, Constants.ADD_OPERATION);
 		if (response != null) {
 			return new ResponseEntity<>(response, (HttpStatus) response.get(Constants.STATUS));
 		}
@@ -37,7 +37,7 @@ public class UserConnectionCrudController {
 	public ResponseEntity<Response> update(@RequestBody ConnectionRequest request) {
 		request.setUpdatedAt(new Date().toString());
 		request.setUpdatedAt(new Date().toString());
-		Response response = connectionService.upsert(request);
+		Response response = connectionService.upsert(request, Constants.UPDATE_OPERATION);
 		if(response != null){
 			return new ResponseEntity<>(response, (HttpStatus) response.get(Constants.STATUS));
 		}

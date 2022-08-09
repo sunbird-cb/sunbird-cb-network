@@ -98,13 +98,14 @@ public class GraphDao implements IGraphDao {
                 int recordSize = result.list().size();
                 result.consume();
                 if (recordSize != 0) {
-                    logger.info( "Nodes exists with reverse edge, new relation cannot be created!", nodeTo.getId(),
+                    updateRelationshipBetweenTwoNodes("Nodes exists with reverse edge, Updating Relationship Properties!", nodeFrom, nodeTo, statement, result, transaction, recordSize, relationProperties);
+                    transaction.commitAsync().toCompletableFuture().get();
+                    logger.info("user relation with toUUID {} and fromUUID {} updated successfully ", nodeTo.getId(),
                             nodeFrom.getId());
                 }
                 else {
                     String query = "MATCH (n:" + label + ")-[r:connect]->(n1:" + label +
-                            ") WHERE n.id = $fromUUID AND n1.id = $toUUID " + "SET r" + " += " +
-                            "$props " + "RETURN n,n1";
+                            ") WHERE n.id = $fromUUID AND n1.id = $toUUID " + "RETURN n,n1";
 
                     statement = new Statement(query, parameters);
                     result = transaction.run(statement);
@@ -113,10 +114,13 @@ public class GraphDao implements IGraphDao {
                     if (recordSize == 0) { // nodes relation doesn't exists
                         createRelationshipBetweenTwoNodes(nodeFrom, nodeTo, transaction, parameters);
                     }
+                    else
+                    {
+                        updateRelationshipBetweenTwoNodes("Nodes exists, Updating Relationship Properties!", nodeTo, nodeFrom, statement, result, transaction, recordSize, relationProperties);
+                    }
                     transaction.commitAsync().toCompletableFuture().get();
-                    logger.info("user relation with toUUID {} and fromUUID {} updated successfully ", nodeTo.getId(),
+                    logger.info("user relation with toUUID {} and fromUUID {} added successfully ", nodeTo.getId(),
                             nodeFrom.getId());
-
                 }
             } catch (Exception e) {
                 transaction.rollbackAsync().toCompletableFuture().get();
@@ -134,6 +138,23 @@ public class GraphDao implements IGraphDao {
                 }
             }
         return Boolean.FALSE;
+    }
+
+    private void updateRelationshipBetweenTwoNodes(String s, Node nodeTo, Node nodeFrom, Statement statement, StatementResult result, Transaction transaction, int recordSize, Map<String, String> relationProperties) {
+        logger.info(s, nodeTo.getId(),
+                nodeFrom.getId());
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put("fromUUID", nodeFrom.getId());
+        parameters.put("toUUID", nodeTo.getId());
+        parameters.put(Constants.Graph.PROPS.getValue(), relationProperties);
+        String updateQuery = "MATCH (n:" + label + ")-[r:connect]->(n1:" + label +
+                ") WHERE n.id = $fromUUID AND n1.id = $toUUID " + "SET r" + " += " +
+                "$props " + "RETURN n,n1";
+
+        statement = new Statement(updateQuery, parameters);
+        result = transaction.run(statement);
+        recordSize = result.list().size();
+        result.consume();
     }
 
     private void createRelationshipBetweenTwoNodes(Node nodeFrom, Node nodeTo, Transaction transaction, Map<String, Object> parameters) {
