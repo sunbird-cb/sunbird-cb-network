@@ -83,7 +83,7 @@ public class GraphDao implements IGraphDao {
     @Override
     public Boolean upsertRelation(Node nodeFrom, Node nodeTo, Map<String, String> relationProperties) throws Exception {
         Session session = neo4jDriver.session();
-        Transaction transaction = session.beginTransaction()
+        Transaction transaction = session.beginTransaction();
             try {
                 Map<String, Object> parameters = new HashMap<>();
                 parameters.put("fromUUID", nodeFrom.getId());
