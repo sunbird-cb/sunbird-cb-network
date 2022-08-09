@@ -24,6 +24,9 @@ public class Node {
 		return createdAt;
 	}
 
+	public Node() {
+	}
+
 	@JsonIgnore
 	public void setCreatedAt(String createdAt) {
 		this.createdAt = createdAt;

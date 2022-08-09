@@ -22,7 +22,7 @@ import org.sunbird.cb.hubservices.util.Constants;
 
 @Service
 public class ConnectionService implements IConnectionService {
-	private Logger logger = LoggerFactory.getLogger(NotificationService.class);
+	private Logger logger = LoggerFactory.getLogger(ConnectionService.class);
 	@Autowired
 	private NotificationService notificationService;
 
@@ -34,8 +34,8 @@ public class ConnectionService implements IConnectionService {
 	@Override
 	public Response upsert(ConnectionRequest request, String updateOperation) {
 		Response response = new Response();
-		Node from = null;
-		Node to = null;
+		Node from = new Node();
+		Node to = new Node();
 		if(validateRequest(request)) {
 			if(updateOperation.equalsIgnoreCase(Constants.ADD_OPERATION)) {
 				from = new Node(request.getUserIdFrom());
@@ -58,7 +58,6 @@ public class ConnectionService implements IConnectionService {
 				response.put(Constants.ResponseStatus.STATUS, HttpStatus.BAD_REQUEST);
 			} catch (Exception e) {
 				logger.error(e.getMessage());
-				e.printStackTrace();
 			}
 		}
 		return response;
