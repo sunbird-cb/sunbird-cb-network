@@ -51,13 +51,13 @@ public class ConnectionService implements IConnectionService {
 				nodeService.connect(from, to, relP);
 				if (connectionProperties.isNotificationEnabled())
 					sendNotification(connectionProperties.getNotificationTemplateRequest(), from.getId(),
-							to.getId(), relP.get("status"));
+							to.getId(), relP.get(Constants.STATUS));
 				response.put(Constants.ResponseStatus.MESSAGE, Constants.ResponseStatus.SUCCESSFUL);
 				response.put(Constants.ResponseStatus.STATUS, HttpStatus.CREATED);
 			} catch (ValidationException ve) {
 				response.put(Constants.ResponseStatus.STATUS, HttpStatus.BAD_REQUEST);
 			} catch (Exception e) {
-				logger.error(e.getMessage());
+				logger.error(String.format("Error while connecting the nodes! error : %s", e.getMessage()));
 			}
 		}
 		return response;
