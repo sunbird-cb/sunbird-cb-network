@@ -27,6 +27,7 @@ public class Constants {
 	public static final String PAGE_NO = "pageNo";
 	public static final String ADD_OPERATION = "Add";
 	public static final String UPDATE_OPERATION = "Update";
+	public static final String FAILED = "Failed";
 
 
 	public enum Graph {

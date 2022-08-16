@@ -8,6 +8,9 @@ public class Node {
 	private String createdAt;
 	private String updatedAt;
 
+	public Node() {
+	}
+
 	public Node(String id) {
 		this.id = id;
 	}
@@ -22,9 +25,6 @@ public class Node {
 
 	public String getCreatedAt() {
 		return createdAt;
-	}
-
-	public Node() {
 	}
 
 	@JsonIgnore

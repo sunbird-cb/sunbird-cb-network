@@ -38,22 +38,33 @@ public class ConnectionService implements IConnectionService {
 		Node to = new Node();
 		if(validateRequest(request)) {
 			if(updateOperation.equalsIgnoreCase(Constants.ADD_OPERATION)) {
-				from = new Node(request.getUserIdFrom());
-				to = new Node(request.getUserIdTo());
+				from.setId(request.getUserIdFrom());
+				to.setId(request.getUserIdTo());
 			}
 			else if(updateOperation.equalsIgnoreCase(Constants.UPDATE_OPERATION))
 			{
-				to = new Node(request.getUserIdFrom());
-				from = new Node(request.getUserIdTo());
+				to.setId(request.getUserIdFrom());
+				from.setId(request.getUserIdTo());
 			}
 			Map<String, String> relP = setRelationshipProperties(request, from, to);
 			try {
-				nodeService.connect(from, to, relP);
-				if (connectionProperties.isNotificationEnabled())
-					sendNotification(connectionProperties.getNotificationTemplateRequest(), from.getId(),
-							to.getId(), relP.get(Constants.STATUS));
-				response.put(Constants.ResponseStatus.MESSAGE, Constants.ResponseStatus.SUCCESSFUL);
-				response.put(Constants.ResponseStatus.STATUS, HttpStatus.CREATED);
+				Boolean areNodesConnected = nodeService.connect(from, to, relP);
+				if(areNodesConnected) {
+					response.put(Constants.ResponseStatus.MESSAGE, Constants.ResponseStatus.SUCCESSFUL);
+					response.put(Constants.ResponseStatus.STATUS, HttpStatus.CREATED);
+					if (connectionProperties.isNotificationEnabled()) {
+						sendNotification(connectionProperties.getNotificationTemplateRequest(), from.getId(),
+								to.getId(), relP.get(Constants.STATUS));
+					}
+				}
+				else
+				{
+					response.put(Constants.ResponseStatus.STATUS, HttpStatus.INTERNAL_SERVER_ERROR);
+					if (connectionProperties.isNotificationEnabled()) {
+						sendNotification(connectionProperties.getNotificationTemplateRequest(), from.getId(),
+								to.getId(), Constants.FAILED);
+					}
+				}
 			} catch (ValidationException ve) {
 				response.put(Constants.ResponseStatus.STATUS, HttpStatus.BAD_REQUEST);
 			} catch (Exception e) {

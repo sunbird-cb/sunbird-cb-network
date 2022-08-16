@@ -8,7 +8,7 @@ import org.sunbird.cb.hubservices.util.Constants;
 
 public interface INodeService {
 
-	public void connect(Node from, Node to, Map<String, String> relationProperties) throws Exception;
+	public Boolean connect(Node from, Node to, Map<String, String> relationProperties) throws Exception;
 
 	public List<Node> getNodeNextLevel(String id, Map<String, String> relationProperties, int offset, int size);
 
