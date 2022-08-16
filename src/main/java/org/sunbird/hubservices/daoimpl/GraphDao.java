@@ -83,7 +83,9 @@ public class GraphDao implements IGraphDao {
             int recordSize = result.list().size();
             result.consume();
             if (recordSize != 0) {
-                updateRelationshipBetweenTwoNodes("Nodes exists with reverse edge, Updating Relationship Properties!", nodeFrom, nodeTo, statement, result, transaction, recordSize, relationProperties);
+                if (logger.isDebugEnabled())
+                    logger.debug(nodeFrom.getId(), nodeTo.getId());
+                updateRelationshipBetweenTwoNodes(nodeFrom, nodeTo, statement, result, transaction, recordSize, relationProperties);
                 transaction.commitAsync().toCompletableFuture().get();
                 logger.info("user relation with toUUID {} and fromUUID {} updated successfully ", nodeTo.getId(),
                         nodeFrom.getId());
@@ -99,8 +101,8 @@ public class GraphDao implements IGraphDao {
                     isUpserted = createRelationshipBetweenTwoNodes(nodeFrom, nodeTo, transaction, parameters);
                 } else {
                     if (logger.isDebugEnabled())
-                        logger.debug("Nodes exists, Updating Relationship Properties!", nodeTo.getId(), nodeFrom.getId());
-                    isUpserted = updateRelationshipBetweenTwoNodes("Nodes exists, Updating Relationship Properties!", nodeTo, nodeFrom, statement, result, transaction, recordSize, relationProperties);
+                        logger.debug(nodeTo.getId(), nodeFrom.getId());
+                    isUpserted = updateRelationshipBetweenTwoNodes(nodeTo, nodeFrom, statement, result, transaction, recordSize, relationProperties);
                 }
                 transaction.commitAsync().toCompletableFuture().get();
                 logger.info("user relation with toUUID {} and fromUUID {} added successfully ", nodeTo.getId(),
@@ -114,7 +116,7 @@ public class GraphDao implements IGraphDao {
         return isUpserted;
     }
 
-    private Boolean updateRelationshipBetweenTwoNodes(String s, Node nodeTo, Node nodeFrom, Statement statement, StatementResult result, Transaction transaction, int recordSize, Map<String, String> relationProperties) {
+    private Boolean updateRelationshipBetweenTwoNodes(Node nodeTo, Node nodeFrom, Statement statement, StatementResult result, Transaction transaction, int recordSize, Map<String, String> relationProperties) {
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("fromUUID", nodeFrom.getId());
         parameters.put("toUUID", nodeTo.getId());
