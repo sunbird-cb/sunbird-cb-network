@@ -41,28 +41,26 @@ public class ConnectionService implements IConnectionService {
 				to.setId(request.getUserIdFrom());
 				from.setId(request.getUserIdTo());
 			}
-			Map<String, String> relP = setRelationshipProperties(request, from, to);
+			Map<String, String> relationshipProperties = setRelationshipProperties(request, from, to);
 			try {
-				Boolean areNodesConnected = nodeService.connect(from, to, relP);
+				Boolean areNodesConnected = nodeService.connect(from, to, relationshipProperties);
 				if(areNodesConnected) {
 					response.put(Constants.ResponseStatus.MESSAGE, Constants.ResponseStatus.SUCCESSFUL);
 					response.put(Constants.ResponseStatus.STATUS, HttpStatus.CREATED);
-					if (connectionProperties.isNotificationEnabled()) {
-						sendNotification(connectionProperties.getNotificationTemplateRequest(), from.getId(),
-								to.getId(), relP.get(Constants.STATUS));
-					}
 				}
 				else
 				{
+					relationshipProperties.put(Constants.STATUS, Constants.FAILED);
 					response.put(Constants.ResponseStatus.STATUS, HttpStatus.INTERNAL_SERVER_ERROR);
-					if (connectionProperties.isNotificationEnabled()) {
-						sendNotification(connectionProperties.getNotificationTemplateRequest(), from.getId(),
-								to.getId(), Constants.FAILED);
-					}
+				}
+				if (connectionProperties.isNotificationEnabled()) {
+					sendNotification(connectionProperties.getNotificationTemplateRequest(), from.getId(),
+							to.getId(), relationshipProperties.get(Constants.STATUS));
 				}
 			} catch (ValidationException ve) {
 				response.put(Constants.ResponseStatus.STATUS, HttpStatus.BAD_REQUEST);
 			} catch (Exception e) {
+				response.put(Constants.ResponseStatus.STATUS, HttpStatus.INTERNAL_SERVER_ERROR);
 				logger.error(String.format("Error while connecting the nodes! error : %s", e.getMessage()));
 			}
 		}

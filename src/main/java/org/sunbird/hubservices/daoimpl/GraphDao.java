@@ -98,6 +98,8 @@ public class GraphDao implements IGraphDao {
                 if (recordSize == 0) { // nodes relation doesn't exists
                     isUpserted = createRelationshipBetweenTwoNodes(nodeFrom, nodeTo, transaction, parameters);
                 } else {
+                    if (logger.isDebugEnabled())
+                        logger.debug("Nodes exists, Updating Relationship Properties!", nodeTo.getId(), nodeFrom.getId());
                     isUpserted = updateRelationshipBetweenTwoNodes("Nodes exists, Updating Relationship Properties!", nodeTo, nodeFrom, statement, result, transaction, recordSize, relationProperties);
                 }
                 transaction.commitAsync().toCompletableFuture().get();
@@ -113,7 +115,6 @@ public class GraphDao implements IGraphDao {
     }
 
     private Boolean updateRelationshipBetweenTwoNodes(String s, Node nodeTo, Node nodeFrom, Statement statement, StatementResult result, Transaction transaction, int recordSize, Map<String, String> relationProperties) {
-        logger.info(s, nodeTo.getId(), nodeFrom.getId());
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("fromUUID", nodeFrom.getId());
         parameters.put("toUUID", nodeTo.getId());
