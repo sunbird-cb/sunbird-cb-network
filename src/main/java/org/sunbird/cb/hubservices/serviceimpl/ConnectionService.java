@@ -34,15 +34,10 @@ public class ConnectionService implements IConnectionService {
 	@Override
 	public Response upsert(ConnectionRequest request, String updateOperation) {
 		Response response = new Response();
-		Node from = new Node();
-		Node to = new Node();
 		if(validateRequest(request)) {
-			if(updateOperation.equalsIgnoreCase(Constants.ADD_OPERATION)) {
-				from.setId(request.getUserIdFrom());
-				to.setId(request.getUserIdTo());
-			}
-			else if(updateOperation.equalsIgnoreCase(Constants.UPDATE_OPERATION))
-			{
+			Node from = new Node(request.getUserIdFrom());
+			Node to = new Node(request.getUserIdFrom());
+			if (updateOperation.equalsIgnoreCase(Constants.UPDATE_OPERATION)) {
 				to.setId(request.getUserIdFrom());
 				from.setId(request.getUserIdTo());
 			}

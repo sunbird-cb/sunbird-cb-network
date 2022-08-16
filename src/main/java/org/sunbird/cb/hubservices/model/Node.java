@@ -8,9 +8,6 @@ public class Node {
 	private String createdAt;
 	private String updatedAt;
 
-	public Node() {
-	}
-
 	public Node(String id) {
 		this.id = id;
 	}
