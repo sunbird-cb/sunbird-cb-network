@@ -25,10 +25,6 @@ import static org.neo4j.driver.v1.Values.parameters;
 
 public class GraphDao implements IGraphDao {
 
-    public static final String FROM_UUID = "fromUUID";
-    public static final String TO_UUID = "toUUID";
-    public static final String UUID = "UUID";
-    public static final String PROPS = "props";
     private final Logger logger = LoggerFactory.getLogger(GraphDao.class);
 
     @Autowired
@@ -44,7 +40,7 @@ public class GraphDao implements IGraphDao {
     @Override
     public Boolean upsertNode(Node node) throws Exception {
         try (Session session = neo4jDriver.session();Transaction transaction = session.beginTransaction()) {
-            Statement statement = new Statement("MATCH (n:" + label + ") WHERE n.id=$fromUUID " + "RETURN n", parameters(FROM_UUID, node.getId()));
+            Statement statement = new Statement("MATCH (n:" + label + ") WHERE n.id=$fromUUID " + "RETURN n", parameters(Constants.FROM_UUID, node.getId()));
             StatementResult result = transaction.run(statement);
             List<Record> existingNodes = result.list();
             result.consume();
@@ -75,8 +71,8 @@ public class GraphDao implements IGraphDao {
         boolean isUpserted = Boolean.FALSE;
         try (Session session = neo4jDriver.session(); Transaction transaction = session.beginTransaction()) {
             Map<String, Object> parameters = new HashMap<>();
-            parameters.put(FROM_UUID, nodeFrom.getId());
-            parameters.put(TO_UUID, nodeTo.getId());
+            parameters.put(Constants.FROM_UUID, nodeFrom.getId());
+            parameters.put(Constants.TO_UUID, nodeTo.getId());
             parameters.put(Constants.Graph.PROPS.getValue(), relationProperties);
 
             String queryNodeExistWithReverseEdge = "MATCH (n:" + label + ")<-[r:connect]-(n1:" +
@@ -118,8 +114,8 @@ public class GraphDao implements IGraphDao {
 
     private Boolean updateRelationshipBetweenTwoNodes(Node nodeTo, Node nodeFrom, Statement statement, StatementResult result, Transaction transaction, int recordSize, Map<String, String> relationProperties) {
         Map<String, Object> parameters = new HashMap<>();
-        parameters.put(FROM_UUID, nodeFrom.getId());
-        parameters.put(TO_UUID, nodeTo.getId());
+        parameters.put(Constants.FROM_UUID, nodeFrom.getId());
+        parameters.put(Constants.TO_UUID, nodeTo.getId());
         parameters.put(Constants.Graph.PROPS.getValue(), relationProperties);
         String updateQuery = "MATCH (n:" + label + ")-[r:connect]->(n1:" + label +
                 ") WHERE n.id = $fromUUID AND n1.id = $toUUID " + "SET r" + " += " +
@@ -248,8 +244,8 @@ public class GraphDao implements IGraphDao {
                     throw new GraphException(ErrorCode.RECORD_NOT_FOUND_ERROR.name(), "Oth level have no neighbours ");
 
                 Map<String, Object> parameters = new HashMap<>();
-                parameters.put(GraphDao.UUID, UUID);
-                parameters.put(PROPS, relationProperties);
+                parameters.put(Constants.UUID, UUID);
+                parameters.put(Constants.PROPS, relationProperties);
 
                 StringBuilder linkNthLevel = new StringBuilder();
                 for (int i = 0; i <= level; i++) {

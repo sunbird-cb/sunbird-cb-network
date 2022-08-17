@@ -28,6 +28,10 @@ public class Constants {
 	public static final String ADD_OPERATION = "Add";
 	public static final String UPDATE_OPERATION = "Update";
 	public static final String FAILED = "Failed";
+	public static final String FROM_UUID = "fromUUID";
+	public static final String TO_UUID = "toUUID";
+	public static final String UUID = "UUID";
+	public static final String PROPS = "props";
 
 
 	public enum Graph {
