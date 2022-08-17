@@ -36,7 +36,7 @@ public class ConnectionService implements IConnectionService {
 		Response response = new Response();
 		if(validateRequest(request)) {
 			Node from = new Node(request.getUserIdFrom());
-			Node to = new Node(request.getUserIdFrom());
+			Node to = new Node(request.getUserIdTo());
 			if (updateOperation.equalsIgnoreCase(Constants.UPDATE_OPERATION)) {
 				to.setId(request.getUserIdFrom());
 				from.setId(request.getUserIdTo());
