@@ -3,6 +3,8 @@ package org.sunbird.cb.hubservices.serviceimpl;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -20,7 +22,7 @@ import org.sunbird.cb.hubservices.util.Constants;
 
 @Service
 public class ConnectionService implements IConnectionService {
-
+	private Logger logger = LoggerFactory.getLogger(ConnectionService.class);
 	@Autowired
 	private NotificationService notificationService;
 
@@ -30,23 +32,36 @@ public class ConnectionService implements IConnectionService {
 	@Autowired
 	INodeService nodeService;
 	@Override
-	public Response upsert(ConnectionRequest request) {
-		Response response = null;
+	public Response upsert(ConnectionRequest request, String updateOperation) {
+		Response response = new Response();
 		if(validateRequest(request)) {
+			Node from = new Node(request.getUserIdFrom());
 			Node to = new Node(request.getUserIdFrom());
-			Node from = new Node(request.getUserIdTo());
-			Map<String, String> relP = setRelationshipProperties(request, from, to);
+			if (updateOperation.equalsIgnoreCase(Constants.UPDATE_OPERATION)) {
+				to.setId(request.getUserIdFrom());
+				from.setId(request.getUserIdTo());
+			}
+			Map<String, String> relationshipProperties = setRelationshipProperties(request, from, to);
 			try {
-				nodeService.connect(from, to, relP);
-				if (connectionProperties.isNotificationEnabled())
+				Boolean areNodesConnected = nodeService.connect(from, to, relationshipProperties);
+				if(areNodesConnected) {
+					response.put(Constants.ResponseStatus.MESSAGE, Constants.ResponseStatus.SUCCESSFUL);
+					response.put(Constants.ResponseStatus.STATUS, HttpStatus.CREATED);
+				}
+				else
+				{
+					relationshipProperties.put(Constants.STATUS, Constants.FAILED);
+					response.put(Constants.ResponseStatus.STATUS, HttpStatus.INTERNAL_SERVER_ERROR);
+				}
+				if (connectionProperties.isNotificationEnabled()) {
 					sendNotification(connectionProperties.getNotificationTemplateRequest(), from.getId(),
-							to.getId(), relP.get("status"));
-				response.put(Constants.ResponseStatus.MESSAGE, Constants.ResponseStatus.SUCCESSFUL);
-				response.put(Constants.ResponseStatus.STATUS, HttpStatus.CREATED);
+							to.getId(), relationshipProperties.get(Constants.STATUS));
+				}
 			} catch (ValidationException ve) {
 				response.put(Constants.ResponseStatus.STATUS, HttpStatus.BAD_REQUEST);
 			} catch (Exception e) {
-				throw new ApplicationException(Constants.Message.FAILED_CONNECTION + e.getMessage());
+				response.put(Constants.ResponseStatus.STATUS, HttpStatus.INTERNAL_SERVER_ERROR);
+				logger.error(String.format("Error while connecting the nodes! error : %s", e.getMessage()));
 			}
 		}
 		return response;
