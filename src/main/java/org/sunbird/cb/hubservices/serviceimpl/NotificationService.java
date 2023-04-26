@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.util.ObjectUtils;
 import org.springframework.web.client.RestTemplate;
 import org.sunbird.cb.hubservices.model.NotificationConfig;
 import org.sunbird.cb.hubservices.model.NotificationEvent;
@@ -62,8 +63,9 @@ public class NotificationService implements INotificationService {
 			List<Map<String, Object>> profiles = profileUtils.getUserProfiles(toList);
 			List<String> toListMails = new ArrayList<>();
 			profiles.forEach(profile -> {
-				toListMails.add(((Map<String, Object>) profile.get(Constants.Profile.PERSONAL_DETAILS))
-						.get("primaryEmail").toString());
+				if (!ObjectUtils.isEmpty(((Map<String, Object>) profile.get(Constants.Profile.PERSONAL_DETAILS)).get("primaryEmail")))
+					toListMails.add(((Map<String, Object>) profile.get(Constants.Profile.PERSONAL_DETAILS))
+							.get("primaryEmail").toString());
 			});
 			notificationEvent.setIds(toListMails);
 
