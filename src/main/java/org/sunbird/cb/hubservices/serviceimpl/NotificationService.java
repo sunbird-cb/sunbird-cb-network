@@ -101,9 +101,7 @@ public class NotificationService implements INotificationService {
 				logger.info("profile dataNode :-{}", dataNode);
 
 				JsonNode profilePersonalDetails = dataNode.get(Constants.Profile.PERSONAL_DETAILS);
-				fromName = profilePersonalDetails.get(Constants.Profile.FIRST_NAME).asText().concat(" ")
-						.concat(profilePersonalDetails.get(Constants.Profile.SUR_NAME).asText());
-
+				fromName = profilePersonalDetails.get(Constants.Profile.FIRST_NAME).asText();
 			} else {
 				fromName = Constants.Profile.HUB_MEMBER;
 			}

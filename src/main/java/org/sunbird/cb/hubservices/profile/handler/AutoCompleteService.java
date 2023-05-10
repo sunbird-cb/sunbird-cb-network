@@ -30,8 +30,7 @@ public class AutoCompleteService {
 	@Autowired
 	private RestHighLevelClient esClient;
 
-	final String[] includeFields = { "employmentDetails.departmentName", "personalDetails.firstname",
-			"personalDetails.surname", "personalDetails.primaryEmail", "id", "professionalDetails.name" };
+	final String[] includeFields = { "employmentDetails.departmentName", "personalDetails.firstname", "personalDetails.primaryEmail", "id", "professionalDetails.name" };
 
 	public List<Map<String, Object>> getUserSearchData(String searchTerm) throws IOException {
 		if (StringUtils.isEmpty(searchTerm))
@@ -41,8 +40,7 @@ public class AutoCompleteService {
 		String depName;
 		final BoolQueryBuilder query = QueryBuilders.boolQuery();
 		query.should(QueryBuilders.matchPhrasePrefixQuery("personalDetails.primaryEmail", searchTerm))
-				.should(QueryBuilders.matchPhrasePrefixQuery("personalDetails.firstname", searchTerm))
-				.should(QueryBuilders.matchPhrasePrefixQuery("personalDetails.surname", searchTerm));
+				.should(QueryBuilders.matchPhrasePrefixQuery("personalDetails.firstname", searchTerm));
 		SearchSourceBuilder sourceBuilder = new SearchSourceBuilder().query(query);
 		sourceBuilder.fetchSource(includeFields, new String[] {});
 		SearchRequest searchRequest = new SearchRequest();
@@ -61,7 +59,6 @@ public class AutoCompleteService {
 			}
 			result = new HashMap<>();
 			result.put("first_name", personalDetails.get("firstname"));
-			result.put("last_name", personalDetails.get("surname"));
 			result.put("email", personalDetails.get("primaryEmail"));
 			result.put("wid", searObjectMap.get("id"));
 			result.put("department_name", depName);
