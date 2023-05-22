@@ -85,6 +85,7 @@ public class ProfileUtils {
 		public static final String ENTITY_TYPE = "entityType";
 		public static final String PROFILE_DETAILS = "profileDetails";
 		public static final String PROFESSIONAL_DETAILS = "professionalDetails";
+		public static final String VERIFIEDKARMAYOGI = "verifiedKarmayogi";
 
 	}
 

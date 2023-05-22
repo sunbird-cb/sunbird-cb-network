@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.util.ObjectUtils;
 import org.sunbird.cb.hubservices.exception.ApplicationException;
 import org.sunbird.cb.hubservices.model.MultiSearch;
 import org.sunbird.cb.hubservices.model.Request;
@@ -104,6 +105,15 @@ public class ProfileService implements IProfileService {
 				ArrayNode nodes = (ArrayNode) node.get("result").get("response").get("content");
 				for (JsonNode n : nodes) {
 					if (!connectionIdsToExclude.contains(n.get(ProfileUtils.Profile.USER_ID).asText())) {
+						if (!ObjectUtils.isEmpty(n.get(ProfileUtils.Profile.VERIFIEDKARMAYOGI))) {
+							((ObjectNode) n.get(ProfileUtils.Profile.PROFILE_DETAILS)).put(ProfileUtils.Profile.VERIFIEDKARMAYOGI,
+									n.get(ProfileUtils.Profile.VERIFIEDKARMAYOGI).asBoolean());
+						}
+						else
+						{
+							((ObjectNode) n.get(ProfileUtils.Profile.PROFILE_DETAILS)).put(ProfileUtils.Profile.VERIFIEDKARMAYOGI,
+									Boolean.FALSE);
+						}
 						((ObjectNode) n.get(ProfileUtils.Profile.PROFILE_DETAILS)).put(ProfileUtils.Profile.USER_ID,
 								n.get(ProfileUtils.Profile.USER_ID).asText());
 						((ObjectNode) n.get(ProfileUtils.Profile.PROFILE_DETAILS)).put(ProfileUtils.Profile.ID,
