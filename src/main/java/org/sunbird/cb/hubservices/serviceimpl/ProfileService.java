@@ -92,7 +92,7 @@ public class ProfileService implements IProfileService {
 
 				request.setRequest(searchQueryMap);
 
-				logger.info(request.toString());
+				logger.info();
 				tags.add(sRequest.getField());
 
 				// Hit user search Api
