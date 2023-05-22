@@ -73,6 +73,7 @@ public class ProfileService implements IProfileService {
 					? Arrays.asList(sourceFields)
 					: ProfileUtils.getUserDefaultFields();
 
+			logger.info(includeFields.toString());
 			for (Search sRequest : mSearchRequest.getSearch()) {
 
 				StringBuilder searchPath = new StringBuilder();
@@ -90,6 +91,8 @@ public class ProfileService implements IProfileService {
 				searchQueryMap.put("fields", includeFields);
 
 				request.setRequest(searchQueryMap);
+
+				logger.info(request.toString());
 				tags.add(sRequest.getField());
 
 				// Hit user search Api
