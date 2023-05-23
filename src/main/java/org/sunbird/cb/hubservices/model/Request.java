@@ -24,12 +24,4 @@ public class Request {
     public void setRequest(Map<String, Object> request) {
         this.request = request;
     }
-
-    @Override
-    public String toString() {
-        return "Request{" +
-                "id='" + id + '\'' +
-                ", request=" + request +
-                '}';
-    }
 }

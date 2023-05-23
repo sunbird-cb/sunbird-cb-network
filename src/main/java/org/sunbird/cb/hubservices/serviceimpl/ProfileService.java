@@ -74,9 +74,7 @@ public class ProfileService implements IProfileService {
 					? Arrays.asList(sourceFields)
 					: ProfileUtils.getUserDefaultFields();
 
-			logger.info(includeFields.toString());
 			for (Search sRequest : mSearchRequest.getSearch()) {
-
 				StringBuilder searchPath = new StringBuilder();
 				searchPath.append(ProfileUtils.Profile.PROFILE_DETAILS).append(".").append(sRequest.getField());
 				// Prepare of SearchDTO
@@ -90,10 +88,7 @@ public class ProfileService implements IProfileService {
 				searchQueryMap.put("offset", mSearchRequest.getOffset());
 				searchQueryMap.put("limit", mSearchRequest.getSize());
 				searchQueryMap.put("fields", includeFields);
-
 				request.setRequest(searchQueryMap);
-
-				logger.info(request.toString());
 				tags.add(sRequest.getField());
 
 				// Hit user search Api
@@ -105,13 +100,11 @@ public class ProfileService implements IProfileService {
 				ArrayNode nodes = (ArrayNode) node.get("result").get("response").get("content");
 				for (JsonNode n : nodes) {
 					if (!connectionIdsToExclude.contains(n.get(ProfileUtils.Profile.USER_ID).asText())) {
-						if (!ObjectUtils.isEmpty(n.get(ProfileUtils.Profile.VERIFIEDKARMAYOGI))) {
-							((ObjectNode) n.get(ProfileUtils.Profile.PROFILE_DETAILS)).put(ProfileUtils.Profile.VERIFIEDKARMAYOGI,
-									n.get(ProfileUtils.Profile.VERIFIEDKARMAYOGI).asBoolean());
-						}
-						else
-						{
-							((ObjectNode) n.get(ProfileUtils.Profile.PROFILE_DETAILS)).put(ProfileUtils.Profile.VERIFIEDKARMAYOGI,
+						if (!ObjectUtils.isEmpty(n.get(Constants.VERIFIEDKARMAYOGI))) {
+							((ObjectNode) n.get(ProfileUtils.Profile.PROFILE_DETAILS)).put(Constants.VERIFIEDKARMAYOGI,
+									n.get(Constants.VERIFIEDKARMAYOGI).asBoolean());
+						} else {
+							((ObjectNode) n.get(ProfileUtils.Profile.PROFILE_DETAILS)).put(Constants.VERIFIEDKARMAYOGI,
 									Boolean.FALSE);
 						}
 						((ObjectNode) n.get(ProfileUtils.Profile.PROFILE_DETAILS)).put(ProfileUtils.Profile.USER_ID,
