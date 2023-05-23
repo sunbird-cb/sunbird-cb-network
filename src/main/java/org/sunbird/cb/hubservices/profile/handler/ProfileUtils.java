@@ -33,6 +33,7 @@ public class ProfileUtils {
 		userFields.add(Constants.PROFILE_DETAILS_PROFESSIOANAL_DETAILS);
 		userFields.add(Constants.PROFILE_DETAILS_EMPLOYMENT_DETAILS);
 		userFields.add(Constants.PROFILE_DETAILS_PERSONAL_DETAILS);
+		userFields.add(Constants.PROFILE_DETAILS_VERIFIED_KARMAYOGI);
 		userFields.add(Constants.USER_ID);
 		return userFields;
 	}

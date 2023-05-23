@@ -30,6 +30,7 @@ public class AutoCompleteService {
 	@Autowired
 	private RestHighLevelClient esClient;
 
+
 	final String[] includeFields = { "profileDetails.verifiedKarmayogi", "employmentDetails.departmentName", "personalDetails.firstname",
 			"personalDetails.surname", "personalDetails.primaryEmail", "id", "professionalDetails.name" };
 

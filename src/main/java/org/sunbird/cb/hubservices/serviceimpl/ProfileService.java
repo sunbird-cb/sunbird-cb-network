@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.util.ObjectUtils;
 import org.sunbird.cb.hubservices.exception.ApplicationException;
 import org.sunbird.cb.hubservices.model.MultiSearch;
 import org.sunbird.cb.hubservices.model.Request;
@@ -74,7 +75,6 @@ public class ProfileService implements IProfileService {
 					: ProfileUtils.getUserDefaultFields();
 
 			for (Search sRequest : mSearchRequest.getSearch()) {
-
 				StringBuilder searchPath = new StringBuilder();
 				searchPath.append(ProfileUtils.Profile.PROFILE_DETAILS).append(".").append(sRequest.getField());
 				// Prepare of SearchDTO
@@ -88,7 +88,6 @@ public class ProfileService implements IProfileService {
 				searchQueryMap.put("offset", mSearchRequest.getOffset());
 				searchQueryMap.put("limit", mSearchRequest.getSize());
 				searchQueryMap.put("fields", includeFields);
-
 				request.setRequest(searchQueryMap);
 				tags.add(sRequest.getField());
 
@@ -101,6 +100,13 @@ public class ProfileService implements IProfileService {
 				ArrayNode nodes = (ArrayNode) node.get("result").get("response").get("content");
 				for (JsonNode n : nodes) {
 					if (!connectionIdsToExclude.contains(n.get(ProfileUtils.Profile.USER_ID).asText())) {
+						if (!ObjectUtils.isEmpty(n.get(Constants.VERIFIEDKARMAYOGI))) {
+							((ObjectNode) n.get(ProfileUtils.Profile.PROFILE_DETAILS)).put(Constants.VERIFIEDKARMAYOGI,
+									n.get(Constants.VERIFIEDKARMAYOGI).asBoolean());
+						} else {
+							((ObjectNode) n.get(ProfileUtils.Profile.PROFILE_DETAILS)).put(Constants.VERIFIEDKARMAYOGI,
+									Boolean.FALSE);
+						}
 						((ObjectNode) n.get(ProfileUtils.Profile.PROFILE_DETAILS)).put(ProfileUtils.Profile.USER_ID,
 								n.get(ProfileUtils.Profile.USER_ID).asText());
 						((ObjectNode) n.get(ProfileUtils.Profile.PROFILE_DETAILS)).put(ProfileUtils.Profile.ID,
