@@ -32,8 +32,8 @@ public class Constants {
 	public static final String TO_UUID = "toUUID";
 	public static final String UUID = "UUID";
 	public static final String PROPS = "props";
-	public static final String PROFILE_DETAILS = "profileDetails";
 	public static final String VERIFIEDKARMAYOGI = "verifiedKarmayogi";
+	public static final String PROFILE_DETAILS_VERIFIED_KARMAYOGI = "profileDetails.verifiedKarmayogi";
 
 
 	public enum Graph {
