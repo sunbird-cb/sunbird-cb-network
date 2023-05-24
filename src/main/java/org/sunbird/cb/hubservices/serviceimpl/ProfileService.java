@@ -104,7 +104,6 @@ public class ProfileService implements IProfileService {
 					Map<String, Object> result = mapper.convertValue(n, new TypeReference<Map<String, Object>>(){});
 					logger.info("Profile Details1 :: {}", result.toString());
 					if (!connectionIdsToExclude.contains(n.get(ProfileUtils.Profile.USER_ID).asText())) {
-						logger.info("Verified Karmayogi :: {}", n.get(Constants.VERIFIEDKARMAYOGI).toString());
 						if (!ObjectUtils.isEmpty(n.get(Constants.VERIFIEDKARMAYOGI))) {
 							logger.info("Verified Karmayogi :: {}", n.get(Constants.VERIFIEDKARMAYOGI).toString());
 							((ObjectNode) n.get(ProfileUtils.Profile.PROFILE_DETAILS)).put(Constants.VERIFIEDKARMAYOGI,
