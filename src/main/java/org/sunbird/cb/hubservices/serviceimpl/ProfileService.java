@@ -1,5 +1,6 @@
 package org.sunbird.cb.hubservices.serviceimpl;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -99,10 +100,16 @@ public class ProfileService implements IProfileService {
 				ArrayNode arrayRes = JsonNodeFactory.instance.arrayNode();
 				ArrayNode nodes = (ArrayNode) node.get("result").get("response").get("content");
 				for (JsonNode n : nodes) {
+					ObjectMapper mapper = new ObjectMapper();
+					Map<String, Object> result = mapper.convertValue(n, new TypeReference<Map<String, Object>>(){});
+					logger.info("Profile Details1 :: {}", result.toString());
 					if (!connectionIdsToExclude.contains(n.get(ProfileUtils.Profile.USER_ID).asText())) {
+						logger.info("Verified Karmayogi :: {}", n.get(Constants.VERIFIEDKARMAYOGI).toString());
 						if (!ObjectUtils.isEmpty(n.get(Constants.VERIFIEDKARMAYOGI))) {
+							logger.info("Verified Karmayogi :: {}", n.get(Constants.VERIFIEDKARMAYOGI).toString());
 							((ObjectNode) n.get(ProfileUtils.Profile.PROFILE_DETAILS)).put(Constants.VERIFIEDKARMAYOGI,
 									n.get(Constants.VERIFIEDKARMAYOGI).asBoolean());
+							logger.info("Profile Details2 :: {}", n.get(ProfileUtils.Profile.PROFILE_DETAILS).toString());
 						} else {
 							((ObjectNode) n.get(ProfileUtils.Profile.PROFILE_DETAILS)).put(Constants.VERIFIEDKARMAYOGI,
 									Boolean.FALSE);
