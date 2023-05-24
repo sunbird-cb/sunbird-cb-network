@@ -104,20 +104,21 @@ public class ProfileService implements IProfileService {
 					Map<String, Object> result = mapper.convertValue(n, new TypeReference<Map<String, Object>>(){});
 					logger.info("Profile Details1 :: {}", result.toString());
 					if (!connectionIdsToExclude.contains(n.get(ProfileUtils.Profile.USER_ID).asText())) {
-						if (!ObjectUtils.isEmpty(n.get(Constants.PROFILE_DETAILS_VERIFIED_KARMAYOGI))) {
-							logger.info("Verified Karmayogi :: {}", n.get(Constants.PROFILE_DETAILS_VERIFIED_KARMAYOGI).toString());
-							((ObjectNode) n.get(ProfileUtils.Profile.PROFILE_DETAILS)).put(Constants.VERIFIEDKARMAYOGI,
-									n.get(Constants.PROFILE_DETAILS_VERIFIED_KARMAYOGI).asBoolean());
+						JsonNode profileDetails = n.get(ProfileUtils.Profile.PROFILE_DETAILS);
+						if (!ObjectUtils.isEmpty(profileDetails.get(Constants.VERIFIEDKARMAYOGI))) {
+							logger.info("Verified Karmayogi :: {}", profileDetails.get(Constants.VERIFIEDKARMAYOGI).toString());
+							((ObjectNode) profileDetails).put(Constants.VERIFIEDKARMAYOGI,
+									profileDetails.get(Constants.VERIFIEDKARMAYOGI).asBoolean());
 							logger.info("Profile Details2 :: {}", n.get(ProfileUtils.Profile.PROFILE_DETAILS).toString());
 						} else {
-							((ObjectNode) n.get(ProfileUtils.Profile.PROFILE_DETAILS)).put(Constants.VERIFIEDKARMAYOGI,
+							((ObjectNode) profileDetails).put(Constants.VERIFIEDKARMAYOGI,
 									Boolean.FALSE);
 						}
-						((ObjectNode) n.get(ProfileUtils.Profile.PROFILE_DETAILS)).put(ProfileUtils.Profile.USER_ID,
+						((ObjectNode) profileDetails).put(ProfileUtils.Profile.USER_ID,
 								n.get(ProfileUtils.Profile.USER_ID).asText());
-						((ObjectNode) n.get(ProfileUtils.Profile.PROFILE_DETAILS)).put(ProfileUtils.Profile.ID,
+						((ObjectNode) profileDetails).put(ProfileUtils.Profile.ID,
 								n.get(ProfileUtils.Profile.USER_ID).asText());
-						((ObjectNode) n.get(ProfileUtils.Profile.PROFILE_DETAILS)).put(ProfileUtils.Profile.AT_ID,
+						((ObjectNode) profileDetails).put(ProfileUtils.Profile.AT_ID,
 								n.get(ProfileUtils.Profile.USER_ID).asText());
 						arrayRes.add(n.get(ProfileUtils.Profile.PROFILE_DETAILS));
 					}
