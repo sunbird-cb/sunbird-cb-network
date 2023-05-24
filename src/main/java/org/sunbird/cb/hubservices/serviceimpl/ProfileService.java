@@ -100,16 +100,11 @@ public class ProfileService implements IProfileService {
 				ArrayNode arrayRes = JsonNodeFactory.instance.arrayNode();
 				ArrayNode nodes = (ArrayNode) node.get("result").get("response").get("content");
 				for (JsonNode n : nodes) {
-					ObjectMapper mapper = new ObjectMapper();
-					Map<String, Object> result = mapper.convertValue(n, new TypeReference<Map<String, Object>>(){});
-					logger.info("Profile Details1 :: {}", result.toString());
 					if (!connectionIdsToExclude.contains(n.get(ProfileUtils.Profile.USER_ID).asText())) {
 						JsonNode profileDetails = n.get(ProfileUtils.Profile.PROFILE_DETAILS);
 						if (!ObjectUtils.isEmpty(profileDetails.get(Constants.VERIFIEDKARMAYOGI))) {
-							logger.info("Verified Karmayogi :: {}", profileDetails.get(Constants.VERIFIEDKARMAYOGI).toString());
 							((ObjectNode) profileDetails).put(Constants.VERIFIEDKARMAYOGI,
 									profileDetails.get(Constants.VERIFIEDKARMAYOGI).asBoolean());
-							logger.info("Profile Details2 :: {}", n.get(ProfileUtils.Profile.PROFILE_DETAILS).toString());
 						} else {
 							((ObjectNode) profileDetails).put(Constants.VERIFIEDKARMAYOGI,
 									Boolean.FALSE);
