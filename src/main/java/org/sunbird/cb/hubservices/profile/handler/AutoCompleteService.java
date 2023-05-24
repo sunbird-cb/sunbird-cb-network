@@ -31,7 +31,7 @@ public class AutoCompleteService {
 	private RestHighLevelClient esClient;
 
 
-	final String[] includeFields = { "profileDetails.verifiedKarmayogi", "employmentDetails.departmentName", "personalDetails.firstname",
+	final String[] includeFields = { "verifiedKarmayogi", "employmentDetails.departmentName", "personalDetails.firstname",
 			"personalDetails.surname", "personalDetails.primaryEmail", "id", "professionalDetails.name" };
 
 	public List<Map<String, Object>> getUserSearchData(String searchTerm) throws IOException {
