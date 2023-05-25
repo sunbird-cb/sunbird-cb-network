@@ -1,5 +1,6 @@
 package org.sunbird.cb.hubservices.serviceimpl;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -11,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.util.ObjectUtils;
 import org.sunbird.cb.hubservices.exception.ApplicationException;
 import org.sunbird.cb.hubservices.model.MultiSearch;
 import org.sunbird.cb.hubservices.model.Request;
@@ -74,7 +76,6 @@ public class ProfileService implements IProfileService {
 					: ProfileUtils.getUserDefaultFields();
 
 			for (Search sRequest : mSearchRequest.getSearch()) {
-
 				StringBuilder searchPath = new StringBuilder();
 				searchPath.append(ProfileUtils.Profile.PROFILE_DETAILS).append(".").append(sRequest.getField());
 				// Prepare of SearchDTO
@@ -88,7 +89,6 @@ public class ProfileService implements IProfileService {
 				searchQueryMap.put("offset", mSearchRequest.getOffset());
 				searchQueryMap.put("limit", mSearchRequest.getSize());
 				searchQueryMap.put("fields", includeFields);
-
 				request.setRequest(searchQueryMap);
 				tags.add(sRequest.getField());
 
@@ -101,11 +101,19 @@ public class ProfileService implements IProfileService {
 				ArrayNode nodes = (ArrayNode) node.get("result").get("response").get("content");
 				for (JsonNode n : nodes) {
 					if (!connectionIdsToExclude.contains(n.get(ProfileUtils.Profile.USER_ID).asText())) {
-						((ObjectNode) n.get(ProfileUtils.Profile.PROFILE_DETAILS)).put(ProfileUtils.Profile.USER_ID,
+						JsonNode profileDetails = n.get(ProfileUtils.Profile.PROFILE_DETAILS);
+						if (!ObjectUtils.isEmpty(profileDetails.get(Constants.VERIFIEDKARMAYOGI))) {
+							((ObjectNode) profileDetails).put(Constants.VERIFIEDKARMAYOGI,
+									profileDetails.get(Constants.VERIFIEDKARMAYOGI).asBoolean());
+						} else {
+							((ObjectNode) profileDetails).put(Constants.VERIFIEDKARMAYOGI,
+									Boolean.FALSE);
+						}
+						((ObjectNode) profileDetails).put(ProfileUtils.Profile.USER_ID,
 								n.get(ProfileUtils.Profile.USER_ID).asText());
-						((ObjectNode) n.get(ProfileUtils.Profile.PROFILE_DETAILS)).put(ProfileUtils.Profile.ID,
+						((ObjectNode) profileDetails).put(ProfileUtils.Profile.ID,
 								n.get(ProfileUtils.Profile.USER_ID).asText());
-						((ObjectNode) n.get(ProfileUtils.Profile.PROFILE_DETAILS)).put(ProfileUtils.Profile.AT_ID,
+						((ObjectNode) profileDetails).put(ProfileUtils.Profile.AT_ID,
 								n.get(ProfileUtils.Profile.USER_ID).asText());
 						arrayRes.add(n.get(ProfileUtils.Profile.PROFILE_DETAILS));
 					}
