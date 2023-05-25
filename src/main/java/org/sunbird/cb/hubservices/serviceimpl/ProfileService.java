@@ -1,6 +1,5 @@
 package org.sunbird.cb.hubservices.serviceimpl;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -102,11 +101,11 @@ public class ProfileService implements IProfileService {
 				for (JsonNode n : nodes) {
 					if (!connectionIdsToExclude.contains(n.get(ProfileUtils.Profile.USER_ID).asText())) {
 						JsonNode profileDetails = n.get(ProfileUtils.Profile.PROFILE_DETAILS);
-						if (!ObjectUtils.isEmpty(profileDetails.get(Constants.VERIFIEDKARMAYOGI))) {
-							((ObjectNode) profileDetails).put(Constants.VERIFIEDKARMAYOGI,
-									profileDetails.get(Constants.VERIFIEDKARMAYOGI).asBoolean());
+						if (!ObjectUtils.isEmpty(profileDetails.get(Constants.VERIFIED_KARMAYOGI))) {
+							((ObjectNode) profileDetails).put(Constants.VERIFIED_KARMAYOGI,
+									profileDetails.get(Constants.VERIFIED_KARMAYOGI).asBoolean());
 						} else {
-							((ObjectNode) profileDetails).put(Constants.VERIFIEDKARMAYOGI,
+							((ObjectNode) profileDetails).put(Constants.VERIFIED_KARMAYOGI,
 									Boolean.FALSE);
 						}
 						((ObjectNode) profileDetails).put(ProfileUtils.Profile.USER_ID,
