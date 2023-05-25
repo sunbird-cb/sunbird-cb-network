@@ -32,7 +32,7 @@ public class Constants {
 	public static final String TO_UUID = "toUUID";
 	public static final String UUID = "UUID";
 	public static final String PROPS = "props";
-	public static final String VERIFIEDKARMAYOGI = "verifiedKarmayogi";
+	public static final String VERIFIED_KARMAYOGI = "verifiedKarmayogi";
 	public static final String PROFILE_DETAILS_VERIFIED_KARMAYOGI = "profileDetails.verifiedKarmayogi";
 
 
@@ -112,7 +112,6 @@ public class Constants {
 		}
 
 		public static final String FIRST_NAME = "firstname";
-		public static final String SUR_NAME = "surname";
 		public static final String PERSONAL_DETAILS = "personalDetails";
 		public static final String HUB_MEMBER = "Hub member";
 

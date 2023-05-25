@@ -100,18 +100,19 @@ public class ProfileService implements IProfileService {
 				ArrayNode nodes = (ArrayNode) node.get("result").get("response").get("content");
 				for (JsonNode n : nodes) {
 					if (!connectionIdsToExclude.contains(n.get(ProfileUtils.Profile.USER_ID).asText())) {
-						if (!ObjectUtils.isEmpty(n.get(Constants.VERIFIEDKARMAYOGI))) {
-							((ObjectNode) n.get(ProfileUtils.Profile.PROFILE_DETAILS)).put(Constants.VERIFIEDKARMAYOGI,
-									n.get(Constants.VERIFIEDKARMAYOGI).asBoolean());
+						JsonNode profileDetails = n.get(ProfileUtils.Profile.PROFILE_DETAILS);
+						if (!ObjectUtils.isEmpty(profileDetails.get(Constants.VERIFIED_KARMAYOGI))) {
+							((ObjectNode) profileDetails).put(Constants.VERIFIED_KARMAYOGI,
+									profileDetails.get(Constants.VERIFIED_KARMAYOGI).asBoolean());
 						} else {
-							((ObjectNode) n.get(ProfileUtils.Profile.PROFILE_DETAILS)).put(Constants.VERIFIEDKARMAYOGI,
+							((ObjectNode) profileDetails).put(Constants.VERIFIED_KARMAYOGI,
 									Boolean.FALSE);
 						}
-						((ObjectNode) n.get(ProfileUtils.Profile.PROFILE_DETAILS)).put(ProfileUtils.Profile.USER_ID,
+						((ObjectNode) profileDetails).put(ProfileUtils.Profile.USER_ID,
 								n.get(ProfileUtils.Profile.USER_ID).asText());
-						((ObjectNode) n.get(ProfileUtils.Profile.PROFILE_DETAILS)).put(ProfileUtils.Profile.ID,
+						((ObjectNode) profileDetails).put(ProfileUtils.Profile.ID,
 								n.get(ProfileUtils.Profile.USER_ID).asText());
-						((ObjectNode) n.get(ProfileUtils.Profile.PROFILE_DETAILS)).put(ProfileUtils.Profile.AT_ID,
+						((ObjectNode) profileDetails).put(ProfileUtils.Profile.AT_ID,
 								n.get(ProfileUtils.Profile.USER_ID).asText());
 						arrayRes.add(n.get(ProfileUtils.Profile.PROFILE_DETAILS));
 					}
