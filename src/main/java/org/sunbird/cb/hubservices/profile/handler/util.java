@@ -63,7 +63,7 @@ public class util {
 	}
 
 	public static void merge(String entityTypeJsonPtr, ObjectNode result, ObjectNode inputNode,
-							 List<String> ignoreFields) {
+			List<String> ignoreFields) {
 		inputNode.fields().forEachRemaining(prop -> {
 			String propKey = prop.getKey();
 			JsonNode propValue = prop.getValue();
