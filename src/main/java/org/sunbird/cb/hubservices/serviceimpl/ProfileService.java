@@ -17,14 +17,17 @@ import org.sunbird.cb.hubservices.model.MultiSearch;
 import org.sunbird.cb.hubservices.model.Request;
 import org.sunbird.cb.hubservices.model.Response;
 import org.sunbird.cb.hubservices.model.Search;
+import org.sunbird.cb.hubservices.model.Node;
 import org.sunbird.cb.hubservices.profile.handler.ProfileUtils;
 import org.sunbird.cb.hubservices.service.IConnectionService;
+import org.sunbird.cb.hubservices.service.INodeService;
 import org.sunbird.cb.hubservices.service.IProfileService;
 import org.sunbird.cb.hubservices.util.ConnectionProperties;
 import org.sunbird.cb.hubservices.util.Constants;
 import org.sunbird.cb.hubservices.util.PrettyPrintingMap;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class ProfileService implements IProfileService {
@@ -39,6 +42,9 @@ public class ProfileService implements IProfileService {
 
 	@Autowired
 	ObjectMapper mapper;
+
+	@Autowired
+	INodeService nodeService;
 
 	@Override
 	public Response findCommonProfileV2(String userId, int offset, int limit) {
@@ -64,6 +70,15 @@ public class ProfileService implements IProfileService {
 		try {
 			List<String> connectionIdsToExclude = connectionService.findUserConnectionsV2(userId,
 					Constants.Status.APPROVED);
+			Map<String, String> relationProperties = new HashMap<>();
+			relationProperties.put(Constants.Graph.STATUS.getValue(), Constants.Status.PENDING);
+
+			List<String> connectionIdsToExcludeForPending = nodeService
+					.getNodes(userId, relationProperties, Constants.DIRECTION.OUT, 0, connectionProperties.getMaxNodeSize(),
+							Arrays.asList(Constants.Graph.ID.getValue()))
+					.stream().map(Node::getId).collect(Collectors.toList());
+
+			connectionIdsToExclude.addAll(connectionIdsToExcludeForPending);
 			connectionIdsToExclude.add(userId);
 			logger.info("multi search request :: {}", mSearchRequest.toString());
 
