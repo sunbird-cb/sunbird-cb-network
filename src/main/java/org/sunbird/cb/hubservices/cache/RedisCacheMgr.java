@@ -32,7 +32,7 @@ public class RedisCacheMgr {
     private final Logger logger = LoggerFactory.getLogger(RedisCacheMgr.class);
     @PostConstruct
     public void postConstruct() {
-        this.questions_cache_ttl = properties.getRedisQuestionsReadTimeOut().intValue();
+        this.questions_cache_ttl = properties.getRedisUserListReadTimeOut().intValue();
         if (!StringUtils.isEmpty(properties.getRedisTimeout())) {
             cache_ttl = Integer.parseInt(properties.getRedisTimeout());
         }

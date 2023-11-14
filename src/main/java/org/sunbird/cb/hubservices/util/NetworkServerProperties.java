@@ -15,8 +15,8 @@ public class NetworkServerProperties {
     @Value("${redis.timeout}")
     private String redisTimeout;
 
-    @Value("${redis.questions.read.timeout}")
-    private Integer redisQuestionsReadTimeOut;
+    @Value("${redis.userList.read.timeout}")
+    private Integer redisUserListReadTimeOut;
 
     @Value("${network.request.default.limit}")
     private Integer defaultLimit;
@@ -48,12 +48,12 @@ public class NetworkServerProperties {
         this.redisTimeout = redisTimeout;
     }
 
-    public Integer getRedisQuestionsReadTimeOut() {
-        return redisQuestionsReadTimeOut;
+    public Integer getRedisUserListReadTimeOut() {
+        return redisUserListReadTimeOut;
     }
 
-    public void setRedisQuestionsReadTimeOut(Integer redisQuestionsReadTimeOut) {
-        this.redisQuestionsReadTimeOut = redisQuestionsReadTimeOut;
+    public void setRedisUserListReadTimeOut(Integer redisUserListReadTimeOut) {
+        this.redisUserListReadTimeOut = redisUserListReadTimeOut;
     }
 
     public Integer getDefaultLimit() {
