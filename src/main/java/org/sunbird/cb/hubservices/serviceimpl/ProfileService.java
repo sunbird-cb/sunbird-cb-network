@@ -1,30 +1,22 @@
 package org.sunbird.cb.hubservices.serviceimpl;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.util.ObjectUtils;
 import org.sunbird.cb.hubservices.exception.ApplicationException;
 import org.sunbird.cb.hubservices.model.MultiSearch;
-import org.sunbird.cb.hubservices.model.Request;
 import org.sunbird.cb.hubservices.model.Response;
-import org.sunbird.cb.hubservices.model.Search;
-import org.sunbird.cb.hubservices.profile.handler.ProfileUtils;
 import org.sunbird.cb.hubservices.service.IConnectionService;
 import org.sunbird.cb.hubservices.service.IProfileService;
-import org.sunbird.cb.hubservices.util.ConnectionProperties;
+import org.sunbird.cb.hubservices.service.IUserUtility;
 import org.sunbird.cb.hubservices.util.Constants;
-import org.sunbird.cb.hubservices.util.PrettyPrintingMap;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Service
 public class ProfileService implements IProfileService {
@@ -32,13 +24,11 @@ public class ProfileService implements IProfileService {
 	private Logger logger = LoggerFactory.getLogger(ProfileService.class);
 
 	@Autowired
-	ConnectionProperties connectionProperties;
-
-	@Autowired
 	IConnectionService connectionService;
 
+
 	@Autowired
-	ObjectMapper mapper;
+	IUserUtility iUserUtility;
 
 	@Override
 	public Response findCommonProfileV2(String userId, int offset, int limit) {
@@ -64,65 +54,13 @@ public class ProfileService implements IProfileService {
 		try {
 			List<String> connectionIdsToExclude = connectionService.findUserConnectionsV2(userId,
 					Constants.Status.APPROVED);
+			List<String> connectionIdsToExcludeForPending = connectionService.findUserConnectionsV2(userId,
+					Constants.Status.PENDING);
 			connectionIdsToExclude.add(userId);
+			connectionIdsToExclude.addAll(connectionIdsToExcludeForPending);
 			logger.info("multi search request :: {}", mSearchRequest.toString());
 
-			List<String> tags = new ArrayList<>();
-			Map<String, Object> tagRes = new HashMap<>();
-
-			List<String> includeFields = sourceFields != null && !Arrays.asList(sourceFields).isEmpty()
-					? Arrays.asList(sourceFields)
-					: ProfileUtils.getUserDefaultFields();
-
-			for (Search sRequest : mSearchRequest.getSearch()) {
-				StringBuilder searchPath = new StringBuilder();
-				searchPath.append(ProfileUtils.Profile.PROFILE_DETAILS).append(".").append(sRequest.getField());
-				// Prepare of SearchDTO
-				Request request = new Request();
-				Map<String, Object> searchQueryMap = new HashMap<>();
-				Map<String, Object> additionalProperties = new HashMap<>();
-				additionalProperties.put(searchPath.toString(), sRequest.getValues().get(0));
-				additionalProperties.put("status", 1);
-				searchQueryMap.put("query", "");
-				searchQueryMap.put("filters", additionalProperties);
-				searchQueryMap.put("offset", mSearchRequest.getOffset());
-				searchQueryMap.put("limit", mSearchRequest.getSize());
-				searchQueryMap.put("fields", includeFields);
-				request.setRequest(searchQueryMap);
-				tags.add(sRequest.getField());
-
-				// Hit user search Api
-				ResponseEntity<?> responseEntity = ProfileUtils.getResponseEntity(
-						connectionProperties.getLearnerServiceHost(), connectionProperties.getUserSearchEndPoint(),
-						request);
-				JsonNode node = mapper.convertValue(responseEntity.getBody(), JsonNode.class);
-				ArrayNode arrayRes = JsonNodeFactory.instance.arrayNode();
-				ArrayNode nodes = (ArrayNode) node.get("result").get("response").get("content");
-				for (JsonNode n : nodes) {
-					if (!connectionIdsToExclude.contains(n.get(ProfileUtils.Profile.USER_ID).asText())) {
-						JsonNode profileDetails = n.get(ProfileUtils.Profile.PROFILE_DETAILS);
-						if (!ObjectUtils.isEmpty(profileDetails.get(Constants.VERIFIED_KARMAYOGI))) {
-							((ObjectNode) profileDetails).put(Constants.VERIFIED_KARMAYOGI,
-									profileDetails.get(Constants.VERIFIED_KARMAYOGI).asBoolean());
-						} else {
-							((ObjectNode) profileDetails).put(Constants.VERIFIED_KARMAYOGI,
-									Boolean.FALSE);
-						}
-						((ObjectNode) profileDetails).put(ProfileUtils.Profile.USER_ID,
-								n.get(ProfileUtils.Profile.USER_ID).asText());
-						((ObjectNode) profileDetails).put(ProfileUtils.Profile.ID,
-								n.get(ProfileUtils.Profile.USER_ID).asText());
-						((ObjectNode) profileDetails).put(ProfileUtils.Profile.AT_ID,
-								n.get(ProfileUtils.Profile.USER_ID).asText());
-						arrayRes.add(n.get(ProfileUtils.Profile.PROFILE_DETAILS));
-					}
-				}
-
-				tagRes.put(sRequest.getField(), arrayRes);
-
-			}
-			logger.info("user search result :: {}", new PrettyPrintingMap<>(tagRes));
-
+			Map<String, Object> tagRes = iUserUtility.getUserInfoFromRedish(mSearchRequest, sourceFields, connectionIdsToExclude);
 			List<Object> finalRes = new ArrayList<>();
 			for (Map.Entry entry : tagRes.entrySet()) {
 				Map<String, Object> resObjects = new HashMap<>();

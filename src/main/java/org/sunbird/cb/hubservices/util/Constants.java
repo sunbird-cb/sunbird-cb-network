@@ -34,6 +34,14 @@ public class Constants {
 	public static final String PROPS = "props";
 	public static final String VERIFIED_KARMAYOGI = "verifiedKarmayogi";
 	public static final String PROFILE_DETAILS_VERIFIED_KARMAYOGI = "profileDetails.verifiedKarmayogi";
+	public static final String REDIS_COMMON_KEY = "NETWORK_";
+	public static final String QUESTION_ID = "qs_id_";
+	public static final String API_REDIS_DELETE = "api.redis.delete";
+	public static final String API_REDIS_GET_KEYS = "api.redis.get.keys";
+	public static final String API_REDIS_GET_KEYS_VALUE_SET = "api.redis.get.keys&values";
+	public static final String SUCCESSFUL = "Successful";
+	public static final String UNDER_SCORE = "_";
+	public static final String USER_LIST = "userList";
 
 
 	public enum Graph {
