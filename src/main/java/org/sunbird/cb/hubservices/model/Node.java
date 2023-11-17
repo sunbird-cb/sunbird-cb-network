@@ -7,6 +7,9 @@ public class Node {
 	private String id;
 	private String createdAt;
 	private String updatedAt;
+	private String fullName;
+	private int status;
+	private String departmentName;
 
 	public Node(String id) {
 		this.id = id;
@@ -38,4 +41,29 @@ public class Node {
 		this.updatedAt = updatedAt;
 	}
 
+	public String getFullName() {
+		return fullName;
+	}
+
+	public void setFullName(String fullName) {
+		this.fullName = fullName;
+	}
+
+	public int getStatus() {
+		return status;
+	}
+
+	public void setStatus(int status) {
+		this.status = status;
+	}
+
+	public String getDepartmentName() {
+		return departmentName;
+	}
+
+	public void setDepartmentName(String departmentName) {
+		this.departmentName = departmentName;
+	}
+
+	
 }
