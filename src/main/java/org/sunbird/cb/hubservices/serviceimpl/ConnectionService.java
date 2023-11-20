@@ -1,6 +1,10 @@
 package org.sunbird.cb.hubservices.serviceimpl;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -8,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.sunbird.cb.hubservices.cassandra.CassandraOperation;
 import org.sunbird.cb.hubservices.exception.ApplicationException;
 import org.sunbird.cb.hubservices.exception.BadRequestException;
 import org.sunbird.cb.hubservices.exception.ValidationException;
@@ -31,10 +36,14 @@ public class ConnectionService implements IConnectionService {
 
 	@Autowired
 	INodeService nodeService;
+
+	@Autowired
+	CassandraOperation cassandraOperation;
+
 	@Override
 	public Response upsert(ConnectionRequest request, String updateOperation) {
 		Response response = new Response();
-		if(validateRequest(request)) {
+		if (validateRequest(request)) {
 			Node from = new Node(request.getUserIdFrom());
 			Node to = new Node(request.getUserIdTo());
 			if (updateOperation.equalsIgnoreCase(Constants.UPDATE_OPERATION)) {
@@ -44,18 +53,16 @@ public class ConnectionService implements IConnectionService {
 			Map<String, String> relationshipProperties = setRelationshipProperties(request, from, to);
 			try {
 				Boolean areNodesConnected = nodeService.connect(from, to, relationshipProperties);
-				if(areNodesConnected) {
+				if (areNodesConnected) {
 					response.put(Constants.ResponseStatus.MESSAGE, Constants.ResponseStatus.SUCCESSFUL);
 					response.put(Constants.ResponseStatus.STATUS, HttpStatus.CREATED);
-				}
-				else
-				{
+				} else {
 					relationshipProperties.put(Constants.STATUS, Constants.FAILED);
 					response.put(Constants.ResponseStatus.STATUS, HttpStatus.INTERNAL_SERVER_ERROR);
 				}
 				if (connectionProperties.isNotificationEnabled()) {
-					sendNotification(connectionProperties.getNotificationTemplateRequest(), from.getId(),
-							to.getId(), relationshipProperties.get(Constants.STATUS));
+					sendNotification(connectionProperties.getNotificationTemplateRequest(), from.getId(), to.getId(),
+							relationshipProperties.get(Constants.STATUS));
 				}
 			} catch (ValidationException ve) {
 				response.put(Constants.ResponseStatus.STATUS, HttpStatus.BAD_REQUEST);
@@ -66,6 +73,7 @@ public class ConnectionService implements IConnectionService {
 		}
 		return response;
 	}
+
 	@Override
 	public boolean validateRequest(ConnectionRequest request) {
 		return (!request.getUserIdFrom().isEmpty() && !request.getUserIdTo().isEmpty())
@@ -89,12 +97,13 @@ public class ConnectionService implements IConnectionService {
 				.stream().map(Node::getId).collect(Collectors.toList());
 
 	}
+
 	@Override
 	public Map<String, String> setRelationshipProperties(ConnectionRequest request, Node from, Node to) {
 		Map<String, String> relP = new HashMap<>();
 		relP.put(Constants.Graph.CONNECTION_ID.getValue(), request.getConnectionId());
 		relP.put(Constants.Graph.STATUS.getValue(), request.getStatus());
-		if (request.getCreatedAt() != null){
+		if (request.getCreatedAt() != null) {
 			relP.put(Constants.Graph.CREATED_AT.getValue(), request.getCreatedAt());
 			from.setCreatedAt(request.getCreatedAt());
 			to.setCreatedAt(request.getCreatedAt());
@@ -177,7 +186,7 @@ public class ConnectionService implements IConnectionService {
 			List<Node> nodes = nodeService.getNodes(userId, relationProperties, direction, offset, limit, null);
 
 			response.put(Constants.ResponseStatus.MESSAGE, Constants.ResponseStatus.SUCCESSFUL);
-			response.put(Constants.ResponseStatus.DATA, nodes);
+			response.put(Constants.ResponseStatus.DATA, enrichUserInfo(nodes));
 			response.put(Constants.ResponseStatus.STATUS, HttpStatus.OK);
 
 		} catch (Exception e) {
@@ -185,6 +194,39 @@ public class ConnectionService implements IConnectionService {
 		}
 
 		return response;
+	}
+
+	private Collection<Node> enrichUserInfo(List<Node> nodes) {
+		logger.info("ConnectionService... enrichUserInfo... node size : " + nodes.size());
+
+		List<String> userIds = nodes.stream().map(Node::getId).collect(Collectors.toList());
+		Map<String, Node> nodeMap = nodes.stream().collect(Collectors.toMap(Node::getId, node -> node));
+
+		List<String> fields = Arrays.asList(Constants.ID, Constants.FIRST_NAME, Constants.STATUS, Constants.CHANNEL);
+		Map<String, Object> propertyMap = new HashMap<>();
+		int loopSize = 50;
+		for (int i = 0; i < userIds.size(); i += loopSize) {
+			List<String> userList = userIds.subList(i, Math.min(userIds.size(), i + loopSize));
+			propertyMap.put(Constants.ID, userList);
+
+			try {
+				List<Map<String, Object>> userInfoList = cassandraOperation
+						.getRecordsByProperties(Constants.KEYSPACE_SUNBIRD, Constants.TABLE_USER, propertyMap, fields);
+				for (Map<String, Object> user : userInfoList) {
+					Map<String, Object> userMap = new HashMap<String, Object>();
+					String userId = (String) user.get(Constants.ID);
+					if (nodeMap.containsKey(userId)) {
+						Node node = nodeMap.get(userId);
+						node.setFullName((String) user.get(Constants.FULL_NAME));
+						node.setDepartmentName((String) user.get(Constants.CHANNEL));
+						node.setStatus((Integer) user.get(Constants.STATUS));
+					}
+				}
+			} catch (Exception e) {
+				logger.error("Failed to enrich user info... Exception: " + e.getMessage(), e);
+			}
+		}
+		return nodeMap.values();
 	}
 
 }
