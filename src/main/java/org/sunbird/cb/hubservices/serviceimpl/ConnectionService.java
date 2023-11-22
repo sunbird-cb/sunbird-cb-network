@@ -217,11 +217,15 @@ public class ConnectionService implements IConnectionService {
 						.getRecordsByProperties(Constants.KEYSPACE_SUNBIRD, Constants.TABLE_USER, propertyMap, fields);
 				for (Map<String, Object> user : userInfoList) {
 					String userId = (String) user.get(Constants.ID);
+					Integer status = (Integer) user.get(Constants.STATUS);
 					if (nodeMap.containsKey(userId)) {
-						Node node = nodeMap.get(userId);
-						node.setFullName((String) user.get(Constants.FULL_NAME));
-						node.setDepartmentName((String) user.get(Constants.CHANNEL));
-						node.setStatus((Integer) user.get(Constants.STATUS));
+						if (status == 0) {
+							nodeMap.remove(userId);
+						} else {
+							Node node = nodeMap.get(userId);
+							node.setFullName((String) user.get(Constants.FULL_NAME));
+							node.setDepartmentName((String) user.get(Constants.CHANNEL));
+						}
 					}
 				}
 			} catch (Exception e) {
