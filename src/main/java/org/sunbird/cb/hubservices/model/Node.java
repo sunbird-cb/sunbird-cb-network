@@ -8,7 +8,6 @@ public class Node {
 	private String createdAt;
 	private String updatedAt;
 	private String fullName;
-	private int status;
 	private String departmentName;
 
 	public Node(String id) {
@@ -47,14 +46,6 @@ public class Node {
 
 	public void setFullName(String fullName) {
 		this.fullName = fullName;
-	}
-
-	public int getStatus() {
-		return status;
-	}
-
-	public void setStatus(int status) {
-		this.status = status;
 	}
 
 	public String getDepartmentName() {

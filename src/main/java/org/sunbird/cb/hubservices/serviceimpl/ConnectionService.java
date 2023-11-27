@@ -133,7 +133,7 @@ public class ConnectionService implements IConnectionService {
 					.collect(Collectors.toList());
 
 			response.put(Constants.ResponseStatus.MESSAGE, Constants.ResponseStatus.SUCCESSFUL);
-			response.put(Constants.ResponseStatus.DATA, detachedNodes);
+			response.put(Constants.ResponseStatus.DATA, enrichUserInfo(detachedNodes));
 			response.put(Constants.ResponseStatus.STATUS, HttpStatus.OK);
 
 		} catch (Exception e) {
@@ -162,7 +162,7 @@ public class ConnectionService implements IConnectionService {
 			response.put(Constants.ResponseStatus.TOTALHIT, count);
 
 			response.put(Constants.ResponseStatus.MESSAGE, Constants.ResponseStatus.SUCCESSFUL);
-			response.put(Constants.ResponseStatus.DATA, nodes);
+			response.put(Constants.ResponseStatus.DATA, enrichUserInfo(nodes));
 			response.put(Constants.ResponseStatus.STATUS, HttpStatus.OK);
 
 		} catch (Exception e) {
@@ -197,8 +197,11 @@ public class ConnectionService implements IConnectionService {
 	}
 
 	private Collection<Node> enrichUserInfo(List<Node> nodes) {
-		logger.info("ConnectionService... enrichUserInfo... node size : " + nodes.size());
+		if(nodes == null || nodes.size() == 0) {
+			return nodes;
+		}
 
+		logger.info("ConnectionService... enrichUserInfo... node size : " + nodes.size());
 		List<String> userIds = nodes.stream().map(Node::getId).collect(Collectors.toList());
 		Map<String, Node> nodeMap = nodes.stream().collect(Collectors.toMap(Node::getId, node -> node));
 
@@ -213,13 +216,16 @@ public class ConnectionService implements IConnectionService {
 				List<Map<String, Object>> userInfoList = cassandraOperation
 						.getRecordsByProperties(Constants.KEYSPACE_SUNBIRD, Constants.TABLE_USER, propertyMap, fields);
 				for (Map<String, Object> user : userInfoList) {
-					Map<String, Object> userMap = new HashMap<String, Object>();
 					String userId = (String) user.get(Constants.ID);
+					Integer status = (Integer) user.get(Constants.STATUS);
 					if (nodeMap.containsKey(userId)) {
-						Node node = nodeMap.get(userId);
-						node.setFullName((String) user.get(Constants.FULL_NAME));
-						node.setDepartmentName((String) user.get(Constants.CHANNEL));
-						node.setStatus((Integer) user.get(Constants.STATUS));
+						if (status == 0) {
+							nodeMap.remove(userId);
+						} else {
+							Node node = nodeMap.get(userId);
+							node.setFullName((String) user.get(Constants.FULL_NAME));
+							node.setDepartmentName((String) user.get(Constants.CHANNEL));
+						}
 					}
 				}
 			} catch (Exception e) {
