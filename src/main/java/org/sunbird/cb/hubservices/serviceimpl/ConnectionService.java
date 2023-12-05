@@ -137,6 +137,7 @@ public class ConnectionService implements IConnectionService {
 			response.put(Constants.ResponseStatus.STATUS, HttpStatus.OK);
 
 		} catch (Exception e) {
+			logger.error("ConnectionService::findSuggestedConnectionsV2 " , e);
 			throw new ApplicationException(Constants.Message.FAILED_CONNECTION + e.getMessage());
 
 		}
@@ -166,6 +167,7 @@ public class ConnectionService implements IConnectionService {
 			response.put(Constants.ResponseStatus.STATUS, HttpStatus.OK);
 
 		} catch (Exception e) {
+			logger.error("ConnectionService::findAllConnectionsIdsByStatusV2 " , e);
 			throw new ApplicationException(Constants.Message.FAILED_CONNECTION + e.getMessage());
 		}
 
@@ -190,6 +192,7 @@ public class ConnectionService implements IConnectionService {
 			response.put(Constants.ResponseStatus.STATUS, HttpStatus.OK);
 
 		} catch (Exception e) {
+			logger.error("ConnectionService::findConnectionsRequestedV2 " , e);
 			throw new ApplicationException(Constants.Message.FAILED_CONNECTION + e.getMessage());
 		}
 
